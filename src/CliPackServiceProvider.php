@@ -26,8 +26,12 @@ class CliPackServiceProvider extends ServiceProvider
      * @var array
      */
     protected $commands = [
+//        'MyForksFiles\CliPack\Commands\DbDumper',
+//        'MyForksFiles\CliPack\Commands\DbImporter',
         'MyForksFiles\CliPack\Commands\DevLog',
-        //'MyForksFiles\CliPack\Commands\DevLog',
+//        'MyForksFiles\CliPack\Commands\GetConfig',
+        'MyForksFiles\CliPack\Commands\RunPhp',
+        'MyForksFiles\CliPack\Commands\ScheduleList',
     ];
 
     /**

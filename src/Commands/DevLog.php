@@ -1,9 +1,9 @@
 <?php
 namespace MyForksFiles\CliPack\Commands;
 
+use Illuminate\Console\Command;
 use Carbon\Carbon;
 use Illuminate\Contracts\Logging\Log;
-use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem as File;
 use Exception;
 
