@@ -37,8 +37,6 @@ class CliPackServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //$langPath = __DIR__ . '/../resources/lang';
-        //$this->loadTranslationsFrom($langPath, 'Command');
 
     }
 
@@ -49,11 +47,11 @@ class CliPackServiceProvider extends ServiceProvider
      */
     public function register()
     {
-//        $this->commands($this->commands);
-//        $this->app->singleton(DevStatusFacade::class, function () {
-//            return new CliPackFacade();
-//        });
-//        $this->app->alias(CliPackFacade::class, 'CliPack');
+        $this->commands($this->commands);
+        $this->app->singleton(DevStatusFacade::class, function () {
+            return new CliPackFacade();
+        });
+        $this->app->alias(CliPackFacade::class, 'CliPack');
     }
 
     /**

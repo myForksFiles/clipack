@@ -35,6 +35,7 @@ class DevLog extends Command
     protected $who = '';
     protected $branch = '';
     protected $limit = 10;
+    protected $messageLength = 30;
     protected $message = '';
 
     /**
@@ -42,14 +43,14 @@ class DevLog extends Command
      *
      * @param Log $logger
      */
-    public function __construct(Log $logger,
-                                File $fileHandler,
-                                Carbon $dateTime
-    )
-    {
+    public function __construct(
+        Log $logger,
+        File $fileHandler,
+        Carbon $dateTime
+    ) {
         $this->fileHandler = $fileHandler;
-        $this->logger = $logger;
-        $this->dateTime = $dateTime;
+        $this->logger      = $logger;
+        $this->dateTime    = $dateTime;
         parent::__construct();
     }
 
@@ -72,11 +73,11 @@ class DevLog extends Command
         $this->file = storage_path() . DIRECTORY_SEPARATOR . $this->file;
 
         if (!$this->fileHandler->exists($this->file)) {
-            $this->error('Filenot exist creating new one!');
+            $this->error('File not exist creating new one!');
             try {
                 $this->fileHandler->put($this->file, $this->message('init log'));
             } catch (Exception $e) {
-                $this->error('Can\'t create new log file! ' , $e->getMessage());
+                $this->error('Can\'t create new log file! ', $e->getMessage());
             }
         }
 
@@ -88,6 +89,9 @@ class DevLog extends Command
         $this->showLast();
     }
 
+    /**
+     *
+     */
     protected function showLast()
     {
         $this->info('Last entries');
@@ -115,11 +119,19 @@ class DevLog extends Command
 
         foreach ($results as &$value) {
             $value = explode(';', $value);
+            if (strlen($value[3]) > $this->messageLength) {
+                $value[3] = str_split($value[3], $this->messageLength);
+                $value[3] = implode(PHP_EOL, $value[3]);
+            }
         }
 
         $this->table($headers, $results);
     }
 
+    /**
+     * @param $message
+     * @return string
+     */
     protected function message($message)
     {
         return $this->getDate() . ';'
@@ -129,6 +141,9 @@ class DevLog extends Command
             . PHP_EOL;
     }
 
+    /**
+     * @param $message
+     */
     protected function save($message)
     {
         if ($this->fileHandler->append($this->file, $this->message($message))) {
@@ -138,10 +153,14 @@ class DevLog extends Command
         }
     }
 
+    /**
+     * @return string
+     */
     protected function getBranch()
     {
         if (empty($this->branch)) {
             $results = exec('git branch | grep \\*');
+            $results = str_replace(PHP_EOL, '', $results);
             $results = str_replace('*', '', $results);
             $results = trim($results);
             if (empty($results)) {
@@ -153,10 +172,13 @@ class DevLog extends Command
         return $this->branch;
     }
 
+    /**
+     * @return string
+     */
     protected function getWho()
     {
         if (empty($this->who)) {
-            $results = exec('whoami');
+            $results = trim(exec('whoami'));
             if (empty($results)) {
                 $results = 'unidentifiedUser';
             }
@@ -166,6 +188,9 @@ class DevLog extends Command
         return $this->who;
     }
 
+    /**
+     * @return string
+     */
     protected function getDate()
     {
         return $this->dateTime

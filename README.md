@@ -6,7 +6,7 @@ Laravel CLI commands tools pack
 Via Composer
 
 ```bash
-$ composer require myforksfiles/clipack
+$ composer require myforksfiles/clipack dev-master
 ```
 
 Then add the service provider in `config/app.php`:
