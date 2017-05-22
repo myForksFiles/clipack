@@ -18,15 +18,15 @@ class DevLog extends Command
      * @var string
      */
     protected $signature = 'dev:log
-                            {message?   : Message as argument which should be saved, dont forget about "")}
-                            {--a|all    : Show all entries, default is 10 last.}';
+                            {message?   : Message}
+                            {--a|all    : Show all}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Store and show statusLog (storage/dev.log).';
+    protected $description = 'Store and show statusLog (storage/dev.log). Message as argument which should be saved, dont forget about "")';
     protected $file = 'dev.log';
     protected $fileHandler;
     protected $logger;
