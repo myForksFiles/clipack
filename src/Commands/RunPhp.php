@@ -15,7 +15,7 @@ class RunPhp extends Command
      */
     protected $name = 'dev:runphp 
                             {file      : Path to file.}
-                            {--c|class : Class which should be called from file.}';
+                            {--c|class : Call class from file.}';
 
     /**
      * The console command description.
