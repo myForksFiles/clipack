@@ -5,7 +5,11 @@ use Illuminate\Console\Command;
 use Carbon\Carbon;
 use Illuminate\Contracts\Logging\Log;
 use Illuminate\Filesystem\Filesystem as File;
+use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Exception;
+use Symfony\Component\HttpFoundation\File\Exception\FileException;
+use Symfony\Component\Process\Process;
+use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
  *
@@ -18,16 +22,20 @@ class DevLog extends Command
      * @var string
      */
     protected $signature = 'dev:log
-                            {message?   : Message as argument which should be saved, dont forget about "")}
-                            {--a|all    : Show all entries, default is 10 last.}';
+                            {protect? : Protect/Lock System}
+                            {unlock?  : Unlock System}
+                            {message? : Message}
+                            {--a|all  : Show all}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Store and show statusLog (storage/dev.log).';
-    protected $file = 'dev.log';
+    protected $description = 'Lock/unlock system, Store and show statusLog. Message as argument which should be saved, dont forget about "")';
+
+    protected $file = 'dev-status.log';
+    protected $message = '';
     protected $fileHandler;
     protected $logger;
     protected $dateTime;
@@ -36,7 +44,33 @@ class DevLog extends Command
     protected $branch = '';
     protected $limit = 10;
     protected $messageLength = 30;
-    protected $message = '';
+
+    /**
+     * Append to file/dir name.
+     *
+     * @var string
+     */
+    protected $suffix = '_LOCK';
+
+    /**
+     * "Protected/locked" files/dirs.
+     *
+     * @var array
+     */
+    protected $lockFiles = [
+        '.git',
+        'composer.json',
+    ];
+
+    /**
+     * Allowed CLI commands.
+     *
+     * @var array
+     */
+    protected $commands = [
+        'git' => 'git branch | grep \\*',
+        'who' => 'whoami',
+    ];
 
     /**
      * constructor, a new command instance.
@@ -47,10 +81,11 @@ class DevLog extends Command
         Log $logger,
         File $fileHandler,
         Carbon $dateTime
-    ) {
+    )
+    {
         $this->fileHandler = $fileHandler;
-        $this->logger      = $logger;
-        $this->dateTime    = $dateTime;
+        $this->logger = $logger;
+        $this->dateTime = $dateTime;
         parent::__construct();
     }
 
@@ -81,16 +116,168 @@ class DevLog extends Command
             }
         }
 
-        if ($this->argument('message')) {
-            $this->save($this->argument('message'));
-            return;
+        $action = $this->checkArguments();
+
+        switch ($action) {
+            case 'protect':
+            case 'lock':
+                if ($this->isLocked()) {
+                    throw new Exception('System already Locked');
+                }
+                $this->systemLock(true);
+                break;
+            case 'unlock':
+                if ($this->isUnLocked()) {
+                    throw new Exception('System already unLocked');
+                }
+                $this->systemLock(false);
+                break;
+            case 'message':
+                $this->saveMessage($this->message($this->message));
+                return;
+            case '':
+            default:
+                $this->checkSystemStatus();
+                $this->showLast();
         }
 
-        $this->showLast();
     }
 
     /**
+     * Check system status.
      *
+     * @return string|void
+     */
+    protected function checkSystemStatus()
+    {
+        $status = $this->isLocked();
+        if ($status) {
+            return 'LOCKED!!!';
+        }
+
+        $status = $this->isUnLocked();
+        if ($status) {
+            return ' unlocked';
+        }
+
+        $this->comment(PHP_EOL . '>>> System errors: ' . $status . PHP_EOL);
+        return;
+    }
+
+    /**
+     * @return int
+     */
+    public function isLocked()
+    {
+        return $this->checkFiles(true);
+    }
+
+    /**
+     * @return int
+     */
+    public function isUnLocked()
+    {
+        return $this->checkFiles();
+    }
+
+    /**
+     * @param bool $locked
+     * @return int
+     */
+    public function checkFiles($locked = false)
+    {
+        $results = 0;
+        foreach ($this->lockFiles as $value) {
+            if ($locked) {
+                $value .= $this->suffix;
+            }
+            if ($this->fileHandler->exists($value)) {
+                ++$results;
+            }
+        }
+
+        return $results;
+    }
+
+    /**
+     * Rename .git directory, and composer.json to protect project against changes/updates.
+     *
+     * @param bool $status
+     */
+    protected function systemLock($status = false)
+    {
+        $files = [];
+        $message = 'Unlocking system ...';
+        foreach ($this->lockFiles as $value) {
+            $source = $value . $this->suffix;
+            $target = $value;
+
+            if ($status) {
+                $message = 'setting protection/LOCK!!!';
+                $source = $value;
+                $target = $value . $this->suffix;
+            }
+
+            $files[$value] = [
+                'source' => $source,
+                'target' => $target,
+            ];
+        }
+
+        $message .= (empty($this->message)) ?: ' - ' . $this->message;
+
+        if ($status) { // unlock
+            $results = $this->message($message);
+            $this->lockFiles($files);
+        } else {
+            $this->lockFiles($files);
+            $results = $this->message($message);
+        }
+
+        $this->saveMessage($results);
+    }
+
+    /**
+     * @param $files array
+     * @throws FileNotFoundException
+     */
+    protected function lockFiles($files)
+    {
+        foreach ($files as $value) {
+            if (!$this->fileHandler->exists($value['source'])) {
+                throw new FileNotFoundException('File not found: ' . $value['source']);
+            }
+            $this->fileHandler->move($value['source'], $value['target']);
+            $this->logger->notice('SystemLock file: ' . $value['source'] . ' > ' . $value['target']);
+        }
+    }
+
+    /**
+     * Get and check command arguments.
+     *
+     * @return mixed first arg
+     */
+    protected function checkArguments()
+    {
+        $results = $this->argument();
+        unset($results['command']);
+        reset($results);
+
+        $action = current($results);
+        if (!empty($action)) {
+            $this->comment(PHP_EOL . 'SystemStatus - ACTION: ' . $action);
+        }
+
+        $message = next($results);
+        if (!empty($message)) {
+            $this->message = $message;
+        }
+
+        return $action;
+    }
+
+    /**
+     * Show last entries from log.
      */
     protected function showLast()
     {
@@ -119,7 +306,7 @@ class DevLog extends Command
 
         foreach ($results as &$value) {
             $value = explode(';', $value);
-            if (strlen($value[3]) > $this->messageLength) {
+            if (isset($value[3]) && strlen($value[3]) > $this->messageLength) {
                 $value[3] = str_split($value[3], $this->messageLength);
                 $value[3] = implode(PHP_EOL, $value[3]);
             }
@@ -129,6 +316,8 @@ class DevLog extends Command
     }
 
     /**
+     * Prepare entry for log.
+     *
      * @param $message
      * @return string
      */
@@ -142,34 +331,30 @@ class DevLog extends Command
     }
 
     /**
-     * @param $message
+     * Store entry in log file.
+     *
+     * @param string $message
      */
-    protected function save($message)
+    protected function saveMessage($message)
     {
-        if ($this->fileHandler->append($this->file, $this->message($message))) {
-            $this->comment('Message saved in log.');
-        } else {
-            $this->error('Can\'t save in log file!');
+        try {
+            $this->fileHandler->append($this->file, $message);
+            $this->line("<info>Message saved in log:</info> <comment>$message</comment>");
+            $this->logger->notice('SystemLock: ' . $message);
+        } catch (FileException $e) {
+            $this->error('Can\'t save in log file! ' . $e->getMessage());
+            $this->logger->error('SystemLock - Can\'t save in log file!: ' . $message . $e->getMessage());
         }
     }
 
     /**
-     * @return string
+     * Execute CLI call and fetch results.
+     *
+     * @return mixed|string|void
      */
     protected function getBranch()
     {
-        if (empty($this->branch)) {
-            $results = exec('git branch | grep \\*');
-            $results = str_replace(PHP_EOL, '', $results);
-            $results = str_replace('*', '', $results);
-            $results = trim($results);
-            if (empty($results)) {
-                $results = 'unidentifiedGitBRANCH';
-            }
-            $this->branch = $results;
-        }
-
-        return $this->branch;
+        return $this->who = $this->callCli('git');
     }
 
     /**
@@ -177,15 +362,40 @@ class DevLog extends Command
      */
     protected function getWho()
     {
-        if (empty($this->who)) {
-            $results = trim(exec('whoami'));
-            if (empty($results)) {
-                $results = 'unidentifiedUser';
-            }
-            $this->who = $results;
+        return $this->who = $this->callCli('who');
+    }
+
+    /**
+     * Call selected command.
+     *
+     * @param $what
+     * @return mixed|string|void
+     * @throws Exception
+     */
+    protected function callCli($what)
+    {
+        if (!isset($this->commands[$what])) {
+            throw new Exception('Call not allowed command ' . (string)$what);
         }
 
-        return $this->who;
+        $process = new Process($this->commands[$what]);
+        $process->run();
+
+        if (!$process->isSuccessful()) {
+//            $this->error('Call command error: ' . (string)$process->getErrorOutput());
+            $this->logger->error('Call command error: ' . (string)$process->getErrorOutput());
+        }
+
+        $results = $process->getOutput();
+        $results = str_replace(PHP_EOL, '', $results);
+        $results = str_replace('*', '', $results);
+        $results = trim($results);
+
+        if (empty($results)) {
+            $results = 'unidentified ' . $what;
+        }
+
+        return $results;
     }
 
     /**
@@ -197,4 +407,5 @@ class DevLog extends Command
             ->createFromFormat('U.u', microtime(true))
             ->format($this->dateTimeFormat);
     }
+
 }
