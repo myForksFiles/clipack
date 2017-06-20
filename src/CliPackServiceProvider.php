@@ -2,6 +2,8 @@
 namespace MyForksFiles\CliPack;
 
 use Illuminate\Support\ServiceProvider;
+use File;
+use Config;
 
 /**
  * This is the service provider.
@@ -41,7 +43,11 @@ class CliPackServiceProvider extends ServiceProvider
      */
     public function boot()
     {
+        $kernel = $this->app['Illuminate\Contracts\Http\Kernel'];
 
+        if ($this->checkAuthBasicStatus()) {
+            $kernel->pushMiddleware('MyForksFiles\CliPack\Http\Middleware\AuthBasic');
+        }
     }
 
     /**
@@ -56,6 +62,11 @@ class CliPackServiceProvider extends ServiceProvider
             return new CliPackFacade();
         });
         $this->app->alias(CliPackFacade::class, 'CliPack');
+
+        //config
+        $this->mergeConfigFrom(
+            __DIR__.'/config/app.php', 'packages.MyForksFiles.CliPack.app'
+        );
     }
 
     /**
@@ -68,4 +79,14 @@ class CliPackServiceProvider extends ServiceProvider
         return [__CLASS__];
     }
 
+    /**
+     * @return bool
+     */
+    protected function checkAuthBasicStatus()
+    {
+        $authBasicFile = Config::get('packages.MyForksFiles.CliPack.app.fileAuthBasicProtection');
+        $authBasicFile = storage_path($authBasicFile);
+
+        return (File::exists($authBasicFile)) ? true : false;
+    }
 }
