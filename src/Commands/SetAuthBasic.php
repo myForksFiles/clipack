@@ -3,6 +3,12 @@ namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
 
+/**
+ * Class SetAuthBasic
+ * @package MyForksFiles\CliPack\Commands
+ *
+ *- -***
+ */
 class SetAuthBasic extends Command
 {
     /**

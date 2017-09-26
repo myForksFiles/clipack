@@ -4,6 +4,12 @@ namespace MyForksFiles\CliPack\Commands;
 use Illuminate\Console\Command;
 use Illuminate\Console\Scheduling\Schedule;
 
+/**
+ * Class ScheduleList
+ * @package MyForksFiles\CliPack\Commands
+ *
+ *- -***
+ */
 class ScheduleList extends Command
 {
     /**

@@ -12,7 +12,7 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
- *
+ *- -***
  */
 class DevLog extends Command
 {
@@ -29,10 +29,11 @@ class DevLog extends Command
 
     /**
      * The console command description.
+     * Message as argument which should be saved, don't forget about ""
      *
      * @var string
      */
-    protected $description = 'Lock/unlock system, Store and show statusLog. Message as argument which should be saved, dont forget about "")';
+    protected $description = 'Lock/unlock system, Store and show statusLog.';
 
     protected $file = 'dev-status.log';
     protected $message = '';

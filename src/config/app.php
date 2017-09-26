@@ -13,7 +13,7 @@ return [
     */
 
     'name' => 'Laravel CLI Pack',
-    'version' => '0.0.2',
+    'version' => '0.0.3',
     'fileAuthBasicProtection' => 'auth_basic_protection',
 
 ];

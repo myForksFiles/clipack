@@ -6,6 +6,12 @@ use Auth;
 use Log;
 use Closure;
 
+/**
+ * Class AuthBasic
+ * @package MyForksFiles\CliPack\Http\Middleware
+ *
+ *- -***
+ */
 class AuthBasic
 {
     /**

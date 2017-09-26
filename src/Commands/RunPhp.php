@@ -5,6 +5,12 @@ use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem as File;
 use Exception;
 
+/**
+ * Class RunPhp
+ * @package MyForksFiles\CliPack\Commands
+ *
+ *- -***
+ */
 class RunPhp extends Command
 {
 
@@ -13,7 +19,7 @@ class RunPhp extends Command
      *
      * @var string
      */
-    protected $name = 'dev:runphp 
+    protected $signature = 'dev:runphp 
                             {file      : Path to file.}
                             {--c|class : Class which should be called from file.}';
 
@@ -22,7 +28,7 @@ class RunPhp extends Command
      *
      * @var string
      */
-    protected $description = 'Include and execute file.';
+    protected $description = 'Include and execute php file.';
 
     public function __construct(File $fileHandler)
     {
