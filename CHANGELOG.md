@@ -14,6 +14,8 @@ dev:getconfig       Show variable from config
 dev:lastlogs        Show lat entries from logs
 dev:usage           
 
+## 2018-11-14 update to laravel 5
+
 ## 2017-06-20 Added command
 dev:authbasic		Set up http Auth Basic on/off.
 

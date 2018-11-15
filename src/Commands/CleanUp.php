@@ -1,11 +1,15 @@
 <?php
+
 namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
 
 /**
  * Class CleanUp
+ *
  * @package MyForksFiles\CliPack\Commands
+ * @author myForksFiles(at)gmail.com
+ * @category CLI Laravel clear tools
  *
  *- -***
  */
@@ -30,11 +34,6 @@ class CleanUp extends Command
     protected $env;
 
     /**
-     * @var
-     */
-    protected $artisan;
-
-    /**
      * Create a new command instance.
      *
      * @return void
@@ -49,10 +48,10 @@ class CleanUp extends Command
      *
      * @return mixed
      */
-    public function fire()
+    public function handle()
     {
         $this->info('Call all clear artisan command');
-        $this->comment('clear-compiled, cache:clear, config:clear , route:clear, view:clear');
+        $this->comment('clear: compiled, cache, config, route, view');
         $this->call('clear-compiled');
         $this->call('cache:clear');
         $this->call('config:clear');

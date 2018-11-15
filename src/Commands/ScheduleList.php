@@ -1,4 +1,5 @@
 <?php
+
 namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
@@ -6,7 +7,10 @@ use Illuminate\Console\Scheduling\Schedule;
 
 /**
  * Class ScheduleList
+ *
  * @package MyForksFiles\CliPack\Commands
+ * @author myForksFiles(at)gmail.com
+ * @category CLI Laravel show schedule list
  *
  *- -***
  */
@@ -21,11 +25,14 @@ class ScheduleList extends Command
 
     /**
      * The console command description.
+     *
      * @var string
      */
     protected $description = 'List scheduled commands.';
 
     /**
+     * Schedule
+     *
      * @var Schedule
      */
     protected $schedule;
@@ -47,28 +54,26 @@ class ScheduleList extends Command
      *
      * @return mixed
      */
-    public function fire()
+    public function handle()
     {
-        $events = array_map(function ($event) {
-            return [
-                'cron' => $event->expression,
-                'command' => static::fixupCommand($event->command),
-            ];
-        }, $this->schedule->events());
+        $events = array_map(
+            function ($event) {
+                return [
+                    'cron'        => $event->expression,
+                    'description' => $event->description,
+                    'command'     => static::getCommand($event->command),
+                ];
+            },
+            $this->schedule->events()
+        );
 
         $this->table(
-            ['Cron', 'Command'],
+            ['Cron', 'Description', 'Command', ],
             $events
         );
     }
 
-    /**
-     * If it's an artisan command, strip off the PHP.
-     *
-     * @param $command
-     * @return string
-     */
-    protected static function fixupCommand($command)
+    protected static function getCommand(string $command): string
     {
         $parts = explode(' ', $command);
         if (count($parts) > 2 && $parts[1] === "'artisan'") {

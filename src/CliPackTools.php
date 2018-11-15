@@ -1,4 +1,5 @@
 <?php
+
 namespace MyForksFiles\CliPack;
 
 use File;
@@ -52,14 +53,14 @@ trait CliPackTools
      */
     public static function fileSize($bytes, $decimals = 2, $separator = ',')
     {
-        $size   = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+        $size = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
         $factor = floor((strlen($bytes) - 1) / 3);
         $results = sprintf(
             "%.{$decimals}f",
             $bytes / pow(1024, $factor)
         );
         $results = str_replace('.', $separator, $results);
-        $results.= ' ' .@$size[$factor];
+        $results .= ' ' . @$size[$factor];
 
         return $results;
     }
@@ -69,8 +70,8 @@ trait CliPackTools
      */
     public static function getDate($date = '', $format = '')
     {
-        $date    = (empty($date)) ? 'now' : $date;
-        $format  = (empty($format)) ? 'Y-m-d H:i:s' : $format;
+        $date = (empty($date)) ? 'now' : $date;
+        $format = (empty($format)) ? 'Y-m-d H:i:s' : $format;
         $results = new DateTime($date);
         $results->createFromFormat('U.u', microtime(true));
 
@@ -188,5 +189,4 @@ trait CliPackTools
         $this->info((new \DateTime())->format('Y-m-d H:i:s') . ' ' . $status . ' ' . $task);
         $this->logger->info($status . ': ' . $task);
     }
-
 }

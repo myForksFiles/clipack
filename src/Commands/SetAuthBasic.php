@@ -1,11 +1,14 @@
 <?php
+
 namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
 
 /**
  * Class SetAuthBasic
+ *
  * @package MyForksFiles\CliPack\Commands
+ * @author MyForksFiles <myForksFiles@gmail.com>
  *
  *- -***
  */
@@ -20,19 +23,13 @@ class SetAuthBasic extends Command
 
     /**
      * The console command description.
+     *
      * @var string
      */
     protected $description = 'Set up http Auth Basic on/off.';
 
     /**
-     * @var Schedule
-     */
-    protected $schedule;
-
-    /**
-     * ScheduleList constructor.
-     *
-     * @param Schedule $schedule
+     * SetAuthBasic constructor.
      */
     public function __construct()
     {
@@ -44,8 +41,7 @@ class SetAuthBasic extends Command
      *
      * @return mixed
      */
-    public function fire()
+    public function handle()
     {
-        
     }
 }

@@ -1,4 +1,5 @@
 <?php
+
 namespace MyForksFiles\CliPack;
 
 use Illuminate\Support\ServiceProvider;
@@ -51,7 +52,8 @@ class CliPackServiceProvider extends ServiceProvider
     {
         //config
         $this->mergeConfigFrom(
-            __DIR__ . '/config/app.php', 'packages.MyForksFiles.CliPack.app'
+            __DIR__ . '/config/app.php',
+            'packages.MyForksFiles.CliPack.app'
         );
 
         $kernel = $this->app['Illuminate\Contracts\Http\Kernel'];
@@ -84,5 +86,4 @@ class CliPackServiceProvider extends ServiceProvider
     {
         return [__CLASS__];
     }
-
 }

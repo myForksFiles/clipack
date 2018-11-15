@@ -1,4 +1,5 @@
 <?php
+
 namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
@@ -12,6 +13,12 @@ use Symfony\Component\Process\Process;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
+ * Class DevLog
+ *
+ * @package MyForksFiles\CliPack\Commands
+ * @author myForksFiles(at)gmail.com
+ * @category CLI Laravel simple cli dev log
+ *
  *- -***
  */
 class DevLog extends Command
@@ -82,8 +89,7 @@ class DevLog extends Command
         Log $logger,
         File $fileHandler,
         Carbon $dateTime
-    )
-    {
+    ) {
         $this->fileHandler = $fileHandler;
         $this->logger = $logger;
         $this->dateTime = $dateTime;
@@ -91,16 +97,15 @@ class DevLog extends Command
     }
 
     /**
-     * Execute the console command.
-     *
      * @throws Exception
      */
-    public function fire()
+    public function handle()
     {
 //        $app = $this->getApplication();
         if (!in_array(
             $this->getLaravel()->environment(),
-            ['local', 'staging', 'debug'])
+            ['local', 'staging', 'debug']
+        )
         ) {
             throw new Exception('Not Allowed on PRODUCTIVE!!!');
             return;
@@ -111,7 +116,10 @@ class DevLog extends Command
         if (!$this->fileHandler->exists($this->file)) {
             $this->error('File not exist creating new one!');
             try {
-                $this->fileHandler->put($this->file, $this->message('init log'));
+                $this->fileHandler->put(
+                    $this->file,
+                    $this->message('init log')
+                );
             } catch (Exception $e) {
                 $this->error('Can\'t create new log file! ', $e->getMessage());
             }
@@ -141,7 +149,6 @@ class DevLog extends Command
                 $this->checkSystemStatus();
                 $this->showLast();
         }
-
     }
 
     /**
@@ -239,10 +246,9 @@ class DevLog extends Command
     }
 
     /**
-     * @param $files array
-     * @throws FileNotFoundException
+     * @param $files
      */
-    protected function lockFiles($files)
+    protected function lockFiles(array $files)
     {
         foreach ($files as $value) {
             if (!$this->fileHandler->exists($value['source'])) {
@@ -399,14 +405,9 @@ class DevLog extends Command
         return $results;
     }
 
-    /**
-     * @return string
-     */
-    protected function getDate()
+    protected function getDate(): string
     {
-        return $this->dateTime
-            ->createFromFormat('U.u', microtime(true))
+        return $this->dateTime->createFromFormat('U.u', microtime(true))
             ->format($this->dateTimeFormat);
     }
-
 }

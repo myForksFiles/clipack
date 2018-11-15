@@ -1,4 +1,5 @@
 <?php
+
 namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
@@ -7,7 +8,10 @@ use Exception;
 
 /**
  * Class RunPhp
- * @package MyForksFiles\CliPack\Commands
+ *
+ * @package  MyForksFiles\CliPack\Commands
+ * @author myForksFiles(at)gmail.com
+ * @category CLI Laravel run php code from file
  *
  *- -***
  */
@@ -30,13 +34,23 @@ class RunPhp extends Command
      */
     protected $description = 'Include and execute php file.';
 
+    /**
+     * RunPhp constructor.
+     *
+     * @param File $fileHandler
+     */
     public function __construct(File $fileHandler)
     {
         $this->fileHandler = $fileHandler;
         parent::__construct();
     }
 
-    public function fire()
+    /**
+     * Execute the console command.
+     *
+     * @return mixed
+     */
+    public function handle()
     {
         if (!$this->argument('file')) {
             $this->info('Please specify file to call.');
@@ -51,7 +65,13 @@ class RunPhp extends Command
         $this->executeFile($file);
     }
 
-    private function executeFile($file)
+    /**
+     * Execute php file
+     *
+     * @param string $file
+     * @return string
+     */
+    private function executeFile(string $file): string
     {
         $this->info('Executing file: ' . $file);
         include $file;
@@ -61,6 +81,6 @@ class RunPhp extends Command
             $callClass = new $className();
         }
 
-        return;
+        return '';
     }
 }
