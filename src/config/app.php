@@ -12,8 +12,8 @@ return [
     | any other location as required by the application or its packages.
     */
 
-    'name' => 'Laravel CLI Pack',
-    'version' => '0.0.3',
+    'name'                    => 'Laravel CLI Pack',
+    'version'                 => '0.2.0',
     'fileAuthBasicProtection' => 'auth_basic_protection',
 
 ];

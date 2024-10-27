@@ -60,7 +60,7 @@ trait CliPackTools
             $bytes / pow(1024, $factor)
         );
         $results = str_replace('.', $separator, $results);
-        $results .= ' ' . @$size[$factor];
+        $results .= ' ' . $size[$factor] ?? 'B';
 
         return $results;
     }
@@ -72,8 +72,7 @@ trait CliPackTools
     {
         $date = (empty($date)) ? 'now' : $date;
         $format = (empty($format)) ? 'Y-m-d H:i:s' : $format;
-        $results = new DateTime($date);
-        $results->createFromFormat('U.u', microtime(true));
+        $results = DateTime::createFromFormat('U.u', microtime(true));
 
         return $results->format($format);
     }
@@ -96,8 +95,8 @@ trait CliPackTools
      * Call shell command.
      *
      * @param $command
+     * @return string
      * @see https://symfony.com/doc/current/components/process.html#disabling-output
-     * @return $mixed
      */
     public static function callCommand($command)
     {
@@ -136,8 +135,10 @@ trait CliPackTools
         $status = false;
 
         if (!$this->checkEnv()) {
-            $this->error('This command is NOT allowed on current environment: '
-                . $this->env);
+            $this->error(
+                'This command is NOT allowed on current environment: '
+                . $this->env
+            );
             exit;
         }
 

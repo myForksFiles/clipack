@@ -21,7 +21,7 @@ class ScheduleList extends Command
      *
      * @var string
      */
-    protected $signature = 'dev:scheduled';
+    protected $signature = 'mff:scheduled';
 
     /**
      * The console command description.

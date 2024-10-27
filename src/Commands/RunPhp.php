@@ -10,10 +10,7 @@ use Exception;
  * Class RunPhp
  *
  * @package  MyForksFiles\CliPack\Commands
- * @author myForksFiles(at)gmail.com
  * @category CLI Laravel run php code from file
- *
- *- -***
  */
 class RunPhp extends Command
 {
@@ -23,7 +20,7 @@ class RunPhp extends Command
      *
      * @var string
      */
-    protected $signature = 'dev:runphp 
+    protected $signature = 'mff:runphp
                             {file      : Path to file.}
                             {--c|class : Class which should be called from file.}';
 
@@ -54,12 +51,14 @@ class RunPhp extends Command
     {
         if (!$this->argument('file')) {
             $this->info('Please specify file to call.');
+            return;
         }
 
         $file = $this->argument('file');
 
         if (!$this->fileHandler->exists($file)) {
             $this->info('Wrong path or file not exist.');
+            return;
         }
 
         $this->executeFile($file);
@@ -78,7 +77,7 @@ class RunPhp extends Command
 
         if ($this->option('class')) {
             $className = $this->option('class');
-            $callClass = new $className();
+            new $className();
         }
 
         return '';

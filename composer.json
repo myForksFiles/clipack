@@ -1,30 +1,62 @@
 {
-    "name": "myforksfiles/clipack",
-    "description": "Laravel commands pack",
-    "keywords": ["laravel", "clipack" , "laravel5", "myforksfiles"],
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "myForksFiles",
-            "email": "myForksFiles@gmail.com"
-        }
-    ],
-    "require": {
-        "php": ">=7.1.9",
-        "laravel/framework": "5.6.*"
-    },
-    "require-dev": {
-        "phpunit/phpunit" : "~4.0||~5.0",
-        "squizlabs/php_codesniffer": "^2.3"
-    },
-    "autoload": {
-        "psr-4": {
-            "MyForksFiles\\CliPack\\": "src"
-        }
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "0.1-dev"
-        }
-    }
+	"name": "myforksfiles/clipack",
+	"description": "Laravel commands pack",
+	"keywords": [
+		"laravel",
+		"clipack",
+		"laravel5",
+		"myforksfiles"
+	],
+	"license": "MIT",
+	"authors": [
+		{
+			"name": "myForksFiles",
+			"email": "myforksfiles+clipack@gmail.com"
+		}
+	],
+	"require": {
+		"php": ">=8.3",
+		"laravel/framework": "11.*"
+	},
+	"require-dev": {
+		"barryvdh/laravel-debugbar": "^3.13",
+		"barryvdh/laravel-ide-helper": "^3.1",
+		"dealerdirect/phpcodesniffer-composer-installer": "^1.0",
+		"driftingly/rector-laravel": "^1.2",
+		"fakerphp/faker": "^1.23",
+		"friendsofphp/php-cs-fixer": "^3.63",
+		"hwi/oauth-bundle": "^2.2",
+		"larastan/larastan": "^2.9",
+		"laravel/breeze": "^2.2",
+		"laravel/pint": "^1.13",
+		"laravel/sail": "^1.26",
+		"laravel/telescope": "^5.2",
+		"laravel/tinker": "^2.9",
+		"mockery/mockery": "^1.6",
+		"nunomaduro/collision": "^8.0",
+		"pestphp/pest": "^3.2",
+		"pestphp/pest-plugin-laravel": "^3.0",
+		"pheromone/phpcs-security-audit": "^2.0",
+		"phpmetrics/phpmetrics": "^3.0",
+		"rector/rector": "^1.2",
+		"roave/security-advisories": "dev-latest",
+		"squizlabs/php_codesniffer": "^3.10"
+	},
+	"autoload": {
+		"psr-4": {
+			"MyForksFiles\\CliPack\\": "src"
+		}
+	},
+	"extra": {
+		"branch-alias": {
+			"dev-master": "0.2-dev"
+		}
+	},
+	"config": {
+		"allow-plugins": {
+			"pestphp/pest-plugin": true,
+			"dealerdirect/phpcodesniffer-composer-installer": true
+		}
+	},
+	"type": "library"
 }

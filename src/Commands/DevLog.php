@@ -2,9 +2,9 @@
 
 namespace MyForksFiles\CliPack\Commands;
 
-use Illuminate\Console\Command;
 use Carbon\Carbon;
-use Illuminate\Contracts\Logging\Log;
+use Psr\Log\LoggerInterface as Log;
+use Illuminate\Console\Command;
 use Illuminate\Filesystem\Filesystem as File;
 use Illuminate\Contracts\Filesystem\FileNotFoundException;
 use Exception;
@@ -65,20 +65,22 @@ class DevLog extends Command
      *
      * @var array
      */
-    protected $lockFiles = [
-        '.git',
-        'composer.json',
-    ];
+    protected $lockFiles
+        = [
+            '.git',
+            'composer.json',
+        ];
 
     /**
      * Allowed CLI commands.
      *
      * @var array
      */
-    protected $commands = [
-        'git' => 'git branch | grep \\*',
-        'who' => 'whoami',
-    ];
+    protected $commands
+        = [
+            'git' => 'git branch | grep \\*',
+            'who' => 'whoami',
+        ];
 
     /**
      * constructor, a new command instance.
@@ -93,6 +95,7 @@ class DevLog extends Command
         $this->fileHandler = $fileHandler;
         $this->logger = $logger;
         $this->dateTime = $dateTime;
+
         parent::__construct();
     }
 
@@ -101,12 +104,10 @@ class DevLog extends Command
      */
     public function handle()
     {
-//        $app = $this->getApplication();
-        if (!in_array(
+        if (in_array(
             $this->getLaravel()->environment(),
-            ['local', 'staging', 'debug']
-        )
-        ) {
+            ['production']
+        )) {
             throw new Exception('Not Allowed on PRODUCTIVE!!!');
             return;
         }
@@ -196,9 +197,7 @@ class DevLog extends Command
     {
         $results = 0;
         foreach ($this->lockFiles as $value) {
-            if ($locked) {
-                $value .= $this->suffix;
-            }
+            $value .= $locked ? $this->suffix : '';
             if ($this->fileHandler->exists($value)) {
                 ++$results;
             }
@@ -389,7 +388,6 @@ class DevLog extends Command
         $process->run();
 
         if (!$process->isSuccessful()) {
-//            $this->error('Call command error: ' . (string)$process->getErrorOutput());
             $this->logger->error('Call command error: ' . (string)$process->getErrorOutput());
         }
 

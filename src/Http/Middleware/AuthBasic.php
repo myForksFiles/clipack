@@ -1,4 +1,5 @@
 <?php
+
 namespace MyForksFiles\CliPack\Http\Middleware;
 
 use App;
@@ -36,8 +37,8 @@ class AuthBasic
      */
     public function handle($request, Closure $next)
     {
-        if (App::environment() == 'production') {
-            return;
+        if (App::environment() != 'production') {
+            return $next($request);
         }
 
         $this->credentials = $this->getCredentials();
@@ -94,10 +95,6 @@ class AuthBasic
      */
     private function basicValidation($user, $pass)
     {
-        return (
-            $user == $this->credentials['user']
-            &&
-            $pass == $this->credentials['pass']
-        ) ? true : false;
+        return $user == $this->credentials['user'] && $pass == $this->credentials['pass'];
     }
 }

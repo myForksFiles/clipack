@@ -19,7 +19,7 @@ class SetAuthBasic extends Command
      *
      * @var string
      */
-    protected $signature = 'dev:authbasic';
+    protected $signature = 'mff:auth:basic';
 
     /**
      * The console command description.
