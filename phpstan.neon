@@ -1,0 +1,27 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
+parameters:
+    level: 5
+    tmpDir: storage/phpstan
+
+    paths:
+        - src/CliPackServiceProvider.php
+        - src/CliPackTools.php
+        - src/Commands/ApacheLogs.php
+        - src/Commands/CleanUp.php
+        - src/Commands/DbDumper.php
+        - src/Commands/DevLog.php
+        - src/Commands/RunPhp.php
+        - src/Commands/ScheduleList.php
+        - src/Http/Middleware/AuthBasic.php
+        - src/Models/SecurityAuditReport.php
+        - src/Services/TranscriptCleaner.php
+
+    ignoreErrors:
+        -
+            identifier: trait.unused
+            path: src/CliPackTools.php
+        -
+            identifier: isset.offset
+            path: src/Models/SecurityAuditReport.php

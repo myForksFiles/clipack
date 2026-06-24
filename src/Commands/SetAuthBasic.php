@@ -7,7 +7,6 @@ use Illuminate\Console\Command;
 /**
  * Class SetAuthBasic
  *
- * @package MyForksFiles\CliPack\Commands
  * @author MyForksFiles <myForksFiles@gmail.com>
  *
  *- -***
@@ -19,7 +18,7 @@ class SetAuthBasic extends Command
      *
      * @var string
      */
-    protected $signature = 'dev:authbasic';
+    protected $signature = 'mff:auth:basic';
 
     /**
      * The console command description.
@@ -41,7 +40,5 @@ class SetAuthBasic extends Command
      *
      * @return mixed
      */
-    public function handle()
-    {
-    }
+    public function handle() {}
 }

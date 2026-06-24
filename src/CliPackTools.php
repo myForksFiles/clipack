@@ -2,17 +2,13 @@
 
 namespace MyForksFiles\CliPack;
 
-use File;
 use Config;
 use DateTime;
+use File;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
  * Class CliPackTools
- * @package MyForksFiles\CliPack
- *
- *- -***
  */
 trait CliPackTools
 {
@@ -25,9 +21,8 @@ trait CliPackTools
         if (empty($authBasicFile)) {
             $authBasicFile = 'auth_basic_protection';
         }
-        $authBasicFile = storage_path($authBasicFile);
 
-        return $authBasicFile;
+        return storage_path($authBasicFile);
     }
 
     /**
@@ -35,20 +30,21 @@ trait CliPackTools
      */
     public static function checkAuthBasicStatus()
     {
-        if (!empty(env('AUTH_USER')) && !empty(env('AUTH_PW'))) {
+        if (! empty(env('AUTH_USER')) && ! empty(env('AUTH_PW'))) {
             return true;
         }
 
-        return (File::exists(self::getFileAuthBasicProtection())) ? true : false;
+        return (bool) File::exists(self::getFileAuthBasicProtection());
     }
 
     /**
      * File size in human readable format.
+     *
      * @see http://jeffreysambells.com/2012/10/25/human-readable-filesize-php
      *
-     * @param $bytes int fileSize
-     * @param int $decimals
-     * @param string $separator
+     * @param  $bytes  int fileSize
+     * @param  int  $decimals
+     * @param  string  $separator
      * @return string
      */
     public static function fileSize($bytes, $decimals = 2, $separator = ',')
@@ -57,12 +53,11 @@ trait CliPackTools
         $factor = floor((strlen($bytes) - 1) / 3);
         $results = sprintf(
             "%.{$decimals}f",
-            $bytes / pow(1024, $factor)
+            $bytes / 1024 ** $factor
         );
         $results = str_replace('.', $separator, $results);
-        $results .= ' ' . @$size[$factor];
 
-        return $results;
+        return $results.(' '.$size[$factor] ?? 'B');
     }
 
     /**
@@ -70,41 +65,33 @@ trait CliPackTools
      */
     public static function getDate($date = '', $format = '')
     {
-        $date = (empty($date)) ? 'now' : $date;
         $format = (empty($format)) ? 'Y-m-d H:i:s' : $format;
-        $results = new DateTime($date);
-        $results->createFromFormat('U.u', microtime(true));
+        $results = DateTime::createFromFormat('U.u', microtime(true));
 
         return $results->format($format);
     }
 
     /**
      * @see https://stackoverflow.com/questions/12424787/how-to-check-if-a-shell-command-exists-from-php
-     *
-     * @param $cmd
      */
     public static function commandExist($cmd)
     {
-        if (empty(shell_exec("which $cmd"))) {
-            return false;
-        }
-
-        return true;
+        return ! (in_array(shell_exec("which $cmd"), ['', '0'], true) || shell_exec("which $cmd") === false || shell_exec("which $cmd") === null);
     }
 
     /**
      * Call shell command.
      *
-     * @param $command
+     * @return string
+     *
      * @see https://symfony.com/doc/current/components/process.html#disabling-output
-     * @return $mixed
      */
     public static function callCommand($command)
     {
         $process = new Process($command);
         $process->run();
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             return $process->getErrorOutput();
         }
 
@@ -113,11 +100,12 @@ trait CliPackTools
 
     /**
      * Get productive url
+     *
      * @return string
      */
     private function getUrlApp()
     {
-        $urlApp = \Config::get('app.url');
+        $urlApp = Config::get('app.url');
 
         if (empty($urlApp)) {
             $this->error('App url NOT DEFINED command > command Canceled');
@@ -129,22 +117,23 @@ trait CliPackTools
 
     /**
      * check current app status
+     *
      * @return bool
      */
     private function checkStatus()
     {
         $status = false;
 
-        if (!$this->checkEnv()) {
-            $this->error('This command is NOT allowed on current environment: '
-                . $this->env);
+        if (! $this->checkEnv()) {
+            $this->error(
+                'This command is NOT allowed on current environment: '
+                .$this->env
+            );
             exit;
         }
 
-        if ($this->checkUrl()) {
-            if ($this->getConfirmation()) {
-                $status = true;
-            }
+        if ($this->checkUrl() && $this->getConfirmation()) {
+            $status = true;
         }
 
         return $status;
@@ -152,8 +141,6 @@ trait CliPackTools
 
     /**
      * Show and log error.
-     *
-     * @param $msg
      */
     public function handleError($msg)
     {
@@ -163,6 +150,7 @@ trait CliPackTools
 
     /**
      * check env
+     *
      * @return bool
      */
     private function checkEnv()
@@ -180,13 +168,10 @@ trait CliPackTools
 
     /**
      * Simple helper for console output.
-     *
-     * @param $status
-     * @param $task
      */
     public function taskInfo($status, $task)
     {
-        $this->info((new \DateTime())->format('Y-m-d H:i:s') . ' ' . $status . ' ' . $task);
-        $this->logger->info($status . ': ' . $task);
+        $this->info((new DateTime)->format('Y-m-d H:i:s').' '.$status.' '.$task);
+        $this->logger->info($status.': '.$task);
     }
 }

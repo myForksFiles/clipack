@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'invalid_x_url' => 'Invalid URL. Provide an x.com or twitter.com link.',
+    'invalid_youtube_url' => 'Invalid YouTube URL.',
+    'cannot_create_directory' => 'Cannot create directory: :path',
+    'cookies_file_not_found' => 'Cookies file was not found: :path',
+    'downloading_x_video' => 'Downloading video from X/Twitter...',
+    'downloading_youtube_video' => 'Downloading video from YouTube...',
+    'downloading_youtube_transcript' => 'Downloading YouTube transcript/subtitles...',
+    'download_failed' => 'Download failed.',
+    'youtube_video_download_failed' => 'Video download failed.',
+    'youtube_transcript_download_failed' => 'Transcript download failed.',
+    'downloaded_subtitles_not_found' => 'Downloaded subtitles were not found.',
+    'video_may_have_no_subtitles_or_needs_cookies' => 'The video may have no subtitles or YouTube may require cookies.',
+    'try_youtube_transcript_with_browser' => 'Try: php artisan youtube:transcript "URL" --browser=chrome',
+    'cannot_read_subtitle_file' => 'Cannot read subtitle file: :path',
+    'transcript_file_not_found' => 'Transcript file was not found.',
+    'converting_transcript_to_article' => 'Converting transcript into an article...',
+    'article_generation_failed' => 'Article generation failed.',
+    'try_with_cookies' => 'Try with cookies:',
+    'or' => 'or:',
+    'done' => 'Done.',
+    'directory' => 'Directory: :path',
+    'subtitles_file' => 'Subtitles: :path',
+    'txt_file' => 'TXT: :path',
+    'article_file' => 'Article: :path',
+];

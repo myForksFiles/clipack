@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'invalid_x_url' => 'Nieprawidłowy URL. Podaj link do x.com albo twitter.com.',
+    'invalid_youtube_url' => 'Nieprawidłowy URL YouTube.',
+    'cannot_create_directory' => 'Nie można utworzyć katalogu: :path',
+    'cookies_file_not_found' => 'Nie znaleziono pliku cookies: :path',
+    'downloading_x_video' => 'Pobieram video z X/Twitter...',
+    'downloading_youtube_video' => 'Pobieram video z YouTube...',
+    'downloading_youtube_transcript' => 'Pobieram transkrypcję/napisy z YouTube...',
+    'download_failed' => 'Pobieranie nie powiodło się.',
+    'youtube_video_download_failed' => 'Nie udało się pobrać video.',
+    'youtube_transcript_download_failed' => 'Nie udało się pobrać transkrypcji.',
+    'downloaded_subtitles_not_found' => 'Nie znaleziono pobranych napisów.',
+    'video_may_have_no_subtitles_or_needs_cookies' => 'Film może nie mieć napisów albo YouTube wymaga cookies.',
+    'try_youtube_transcript_with_browser' => 'Spróbuj: php artisan youtube:transcript "URL" --browser=chrome',
+    'cannot_read_subtitle_file' => 'Nie można odczytać pliku napisów: :path',
+    'transcript_file_not_found' => 'Nie znaleziono pliku transkrypcji.',
+    'converting_transcript_to_article' => 'Konwertuję transkrypcję na artykuł...',
+    'article_generation_failed' => 'Nie udało się wygenerować artykułu.',
+    'try_with_cookies' => 'Spróbuj z cookies:',
+    'or' => 'albo:',
+    'done' => 'Gotowe.',
+    'directory' => 'Katalog: :path',
+    'subtitles_file' => 'Napisy: :path',
+    'txt_file' => 'TXT: :path',
+    'article_file' => 'Artykuł: :path',
+];

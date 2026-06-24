@@ -1,19 +1,18 @@
 <?php
 
 return [
-
-    /*
-    |--------------------------------------------------------------------------
-    | Application Name
-    |--------------------------------------------------------------------------
-    |
-    | This value is the name of your application. This value is used when the
-    | framework needs to place the application's name in a notification or
-    | any other location as required by the application or its packages.
-    */
-
     'name' => 'Laravel CLI Pack',
-    'version' => '0.0.3',
-    'fileAuthBasicProtection' => 'auth_basic_protection',
+    'version' => '1.0.0',
+    'file_auth_basic_protection' => 'auth_basic_protection',
 
+    'auth_basic' => [
+        'enabled' => env('CLIPACK_AUTH_BASIC_ENABLED', false),
+        'user' => env('CLIPACK_AUTH_USER', 'user'),
+        'password' => env('CLIPACK_AUTH_PASSWORD', 'secretPassword'),
+    ],
+
+    'run_php' => [
+        'enabled' => env('CLIPACK_RUN_PHP_ENABLED', false),
+        'allowed_path' => storage_path('app/clipack-scripts'),
+    ],
 ];
