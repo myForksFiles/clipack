@@ -1,0 +1,28 @@
+<?php
+
+return [
+    'invalid_x_url' => 'Ungültige URL. Gib einen Link zu x.com oder twitter.com an.',
+    'invalid_youtube_url' => 'Ungültige YouTube-URL.',
+    'cannot_create_directory' => 'Verzeichnis kann nicht erstellt werden: :path',
+    'cookies_file_not_found' => 'Cookies-Datei wurde nicht gefunden: :path',
+    'downloading_x_video' => 'Video von X/Twitter wird heruntergeladen...',
+    'downloading_youtube_video' => 'Video von YouTube wird heruntergeladen...',
+    'downloading_youtube_transcript' => 'YouTube-Transkript/Untertitel werden heruntergeladen...',
+    'download_failed' => 'Download fehlgeschlagen.',
+    'youtube_video_download_failed' => 'Video-Download fehlgeschlagen.',
+    'youtube_transcript_download_failed' => 'Transkript-Download fehlgeschlagen.',
+    'downloaded_subtitles_not_found' => 'Heruntergeladene Untertitel wurden nicht gefunden.',
+    'video_may_have_no_subtitles_or_needs_cookies' => 'Das Video hat möglicherweise keine Untertitel oder YouTube benötigt Cookies.',
+    'try_youtube_transcript_with_browser' => 'Versuche: php artisan mff:youtube:transcript "URL" --browser=chrome',
+    'cannot_read_subtitle_file' => 'Untertiteldatei kann nicht gelesen werden: :path',
+    'transcript_file_not_found' => 'Transkriptdatei wurde nicht gefunden.',
+    'converting_transcript_to_article' => 'Transkript wird in einen Artikel umgewandelt...',
+    'article_generation_failed' => 'Artikelerstellung fehlgeschlagen.',
+    'try_with_cookies' => 'Versuche es mit Cookies:',
+    'or' => 'oder:',
+    'done' => 'Fertig.',
+    'directory' => 'Verzeichnis: :path',
+    'subtitles_file' => 'Untertitel: :path',
+    'txt_file' => 'TXT: :path',
+    'article_file' => 'Artikel: :path',
+];

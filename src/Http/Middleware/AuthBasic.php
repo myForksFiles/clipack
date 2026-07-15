@@ -1,57 +1,51 @@
 <?php
+
 namespace MyForksFiles\CliPack\Http\Middleware;
 
-use App;
-use Auth;
-use Log;
 use Closure;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\Log;
+use Symfony\Component\HttpFoundation\Response;
 
-/**
- * Class AuthBasic
- * @package MyForksFiles\CliPack\Http\Middleware
- *
- *- -***
- */
 class AuthBasic
 {
     /**
-     * Default credentials user name, pass value, can be replaced via .env AUTH_PW.
-     *
-     * @var string
+     * @var array<string, string>
      */
-    protected $credentials = [
+    protected array $credentials = [
         'user' => 'user',
         'pass' => 'secretPassword',
     ];
 
     /**
-     * @var array
+     * @param  Closure(Request): Response  $next
      */
-    protected $authHeaders = ['WWW-Authenticate' => 'Basic'];
-
-    /**
-     * @param $request
-     * @param Closure $next
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|mixed|\Symfony\Component\HttpFoundation\Response|void
-     */
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        if (App::environment() == 'production') {
-            return;
+        if (! App::isProduction()) {
+            return $next($request);
         }
 
         $this->credentials = $this->getCredentials();
 
-        $user = $request->header('PHP_AUTH_USER');
-        $pass = $request->header('PHP_AUTH_PW');
+        $user = (string) $request->getUser();
+        $pass = (string) $request->getPassword();
 
-        if (empty($user) && empty($pass)) {
-            Log::warning('Login required: ' . $_SERVER['REMOTE_ADDR']);
-            return $this->authResponse('Login required!');
+        if ($user === '' || $pass === '') {
+            Log::warning('Basic auth login required.', [
+                'ip' => $request->ip(),
+            ]);
+
+            return $this->authResponse('Login required.');
         }
 
-        if (!$this->basicValidation($user, $pass)) {
-            Log::warning('Invalid credentials: ' . $_SERVER['REMOTE_ADDR'] . ';' . $user . ';' . $pass);
+        if (! $this->basicValidation($user, $pass)) {
+            Log::warning('Invalid basic auth credentials.', [
+                'ip' => $request->ip(),
+                'user' => $user,
+            ]);
+
             return $this->authResponse('Invalid credentials.');
         }
 
@@ -59,45 +53,28 @@ class AuthBasic
     }
 
     /**
-     * Replace credentials from .env.
-     *
-     * @return array
+     * @return array{user: string, pass: string}
      */
-    protected function getCredentials()
+    protected function getCredentials(): array
     {
-        $user = env('AUTH_USER', $this->credentials['user']);
-        $pass = env('AUTH_PW', $this->credentials['pass']);
-
         return [
-            'user' => $user,
-            'pass' => $pass,
+            'user' => (string) config('clipack.auth_basic.user', $this->credentials['user']),
+            'pass' => (string) config('clipack.auth_basic.password', $this->credentials['pass']),
         ];
     }
 
-    /**
-     * @param $msg
-     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Symfony\Component\HttpFoundation\Response
-     */
-    private function authResponse($msg)
+    private function authResponse(string $msg): Response
     {
         return response(
-            'Whoops, looks like something went wrong: ' . $msg,
+            'Whoops, looks like something went wrong: '.$msg,
             401,
-            $this->authHeaders
+            ['WWW-Authenticate' => 'Basic']
         );
     }
 
-    /**
-     * @param $user
-     * @param $pass
-     * @return bool
-     */
-    private function basicValidation($user, $pass)
+    private function basicValidation(string $user, string $pass): bool
     {
-        return (
-            $user == $this->credentials['user']
-            &&
-            $pass == $this->credentials['pass']
-        ) ? true : false;
+        return hash_equals($this->credentials['user'], $user)
+            && hash_equals($this->credentials['pass'], $pass);
     }
 }

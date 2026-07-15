@@ -2,191 +2,89 @@
 
 namespace MyForksFiles\CliPack;
 
-use File;
-use Config;
-use DateTime;
+use DateTimeImmutable;
+use Illuminate\Support\Facades\Config;
+use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Process;
-use Symfony\Component\Process\Exception\ProcessFailedException;
 
 /**
- * Class CliPackTools
- * @package MyForksFiles\CliPack
- *
- *- -***
+ * Shared helpers for CliPack commands.
  */
 trait CliPackTools
 {
-    /**
-     * @return string
-     */
-    public static function getFileAuthBasicProtection()
+    public static function getFileAuthBasicProtection(): string
     {
-        $authBasicFile = Config::get('packages.MyForksFiles.CliPack.app.fileAuthBasicProtection');
-        if (empty($authBasicFile)) {
+        $authBasicFile = Config::get('clipack.file_auth_basic_protection');
+
+        if (! is_string($authBasicFile) || $authBasicFile === '') {
             $authBasicFile = 'auth_basic_protection';
         }
-        $authBasicFile = storage_path($authBasicFile);
 
-        return $authBasicFile;
+        return storage_path($authBasicFile);
     }
 
-    /**
-     * @return bool
-     */
-    public static function checkAuthBasicStatus()
+    public static function checkAuthBasicStatus(): bool
     {
-        if (!empty(env('AUTH_USER')) && !empty(env('AUTH_PW'))) {
+        if ((bool) config('clipack.auth_basic.enabled', false)) {
             return true;
         }
 
-        return (File::exists(self::getFileAuthBasicProtection())) ? true : false;
+        return File::exists(self::getFileAuthBasicProtection());
     }
 
     /**
      * File size in human readable format.
-     * @see http://jeffreysambells.com/2012/10/25/human-readable-filesize-php
      *
-     * @param $bytes int fileSize
-     * @param int $decimals
-     * @param string $separator
-     * @return string
+     * @see http://jeffreysambells.com/2012/10/25/human-readable-filesize-php
      */
-    public static function fileSize($bytes, $decimals = 2, $separator = ',')
+    public static function fileSize(int|string $bytes, int $decimals = 2, string $separator = ','): string
     {
+        $bytes = (int) $bytes;
         $size = ['B', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        $factor = floor((strlen($bytes) - 1) / 3);
+        $factor = $bytes > 0 ? (int) floor((strlen((string) $bytes) - 1) / 3) : 0;
+        $factor = min($factor, count($size) - 1);
+
         $results = sprintf(
             "%.{$decimals}f",
-            $bytes / pow(1024, $factor)
+            $bytes / 1024 ** $factor
         );
         $results = str_replace('.', $separator, $results);
-        $results .= ' ' . @$size[$factor];
 
-        return $results;
+        return $results.' '.$size[$factor];
     }
 
-    /**
-     * @return string
-     */
-    public static function getDate($date = '', $format = '')
+    public static function getDate(string $date = '', string $format = ''): string
     {
-        $date = (empty($date)) ? 'now' : $date;
-        $format = (empty($format)) ? 'Y-m-d H:i:s' : $format;
-        $results = new DateTime($date);
-        $results->createFromFormat('U.u', microtime(true));
+        $format = $format === '' ? 'Y-m-d H:i:s' : $format;
 
-        return $results->format($format);
+        return (new DateTimeImmutable)->format($format);
     }
 
-    /**
-     * @see https://stackoverflow.com/questions/12424787/how-to-check-if-a-shell-command-exists-from-php
-     *
-     * @param $cmd
-     */
-    public static function commandExist($cmd)
+    public static function commandExist(string $cmd): bool
     {
-        if (empty(shell_exec("which $cmd"))) {
-            return false;
-        }
+        $process = Process::fromShellCommandline('command -v '.escapeshellarg($cmd));
+        $process->run();
 
-        return true;
+        return $process->isSuccessful() && trim($process->getOutput()) !== '';
     }
 
     /**
-     * Call shell command.
-     *
-     * @param $command
-     * @see https://symfony.com/doc/current/components/process.html#disabling-output
-     * @return $mixed
+     * @param  array<int, string>  $command
      */
-    public static function callCommand($command)
+    public static function callCommand(array $command): string
     {
         $process = new Process($command);
         $process->run();
 
-        if (!$process->isSuccessful()) {
+        if (! $process->isSuccessful()) {
             return $process->getErrorOutput();
         }
 
         return $process->getOutput();
     }
 
-    /**
-     * Get productive url
-     * @return string
-     */
-    private function getUrlApp()
+    public function taskInfo(string $status, string $task): void
     {
-        $urlApp = \Config::get('app.url');
-
-        if (empty($urlApp)) {
-            $this->error('App url NOT DEFINED command > command Canceled');
-            exit;
-        }
-
-        return $urlApp;
-    }
-
-    /**
-     * check current app status
-     * @return bool
-     */
-    private function checkStatus()
-    {
-        $status = false;
-
-        if (!$this->checkEnv()) {
-            $this->error('This command is NOT allowed on current environment: '
-                . $this->env);
-            exit;
-        }
-
-        if ($this->checkUrl()) {
-            if ($this->getConfirmation()) {
-                $status = true;
-            }
-        }
-
-        return $status;
-    }
-
-    /**
-     * Show and log error.
-     *
-     * @param $msg
-     */
-    public function handleError($msg)
-    {
-        $this->error($msg);
-        $this->logger->error($msg);
-    }
-
-    /**
-     * check env
-     * @return bool
-     */
-    private function checkEnv()
-    {
-        $status = false;
-
-        if ($this->env != 'production'
-            && in_array($this->env, $this->allowedEnv)
-        ) {
-            $status = true;
-        }
-
-        return $status;
-    }
-
-    /**
-     * Simple helper for console output.
-     *
-     * @param $status
-     * @param $task
-     */
-    public function taskInfo($status, $task)
-    {
-        $this->info((new \DateTime())->format('Y-m-d H:i:s') . ' ' . $status . ' ' . $task);
-        $this->logger->info($status . ': ' . $task);
+        $this->info((new DateTimeImmutable)->format('Y-m-d H:i:s').' '.$status.' '.$task);
     }
 }

@@ -3,87 +3,103 @@
 namespace MyForksFiles\CliPack;
 
 use Illuminate\Support\ServiceProvider;
+use MyForksFiles\CliPack\Commands\ApacheLogs;
+use MyForksFiles\CliPack\Commands\CheckAppSchema;
+use MyForksFiles\CliPack\Commands\CleanAll;
+use MyForksFiles\CliPack\Commands\CleanFiles;
+use MyForksFiles\CliPack\Commands\CreateUser;
+use MyForksFiles\CliPack\Commands\CrontabBackup;
+use MyForksFiles\CliPack\Commands\DbDumper;
+use MyForksFiles\CliPack\Commands\DbImporter;
+use MyForksFiles\CliPack\Commands\DevLog;
+use MyForksFiles\CliPack\Commands\DiskSpace;
+use MyForksFiles\CliPack\Commands\ExportLang;
+use MyForksFiles\CliPack\Commands\FreeSpace;
+use MyForksFiles\CliPack\Commands\LogRotate;
+use MyForksFiles\CliPack\Commands\RunPhp;
+use MyForksFiles\CliPack\Commands\RunSecurityAuditCommand;
+use MyForksFiles\CliPack\Commands\ScheduleList;
+use MyForksFiles\CliPack\Commands\SetAuthBasic;
+use MyForksFiles\CliPack\Commands\SymfonyLocalPhpSecurityChecker;
+use MyForksFiles\CliPack\Commands\VideoDownloadX;
+use MyForksFiles\CliPack\Commands\VideoDownloadYoutube;
+use MyForksFiles\CliPack\Commands\VideoYoutubeTranscript;
+use MyForksFiles\CliPack\Commands\VideoYoutubeTranscriptArticle;
+use MyForksFiles\CliPack\Commands\YoutubeFindChannelCommand;
+use MyForksFiles\CliPack\Services\SecurityAuditService;
+use MyForksFiles\CliPack\Services\TranscriptCleaner;
+use MyForksFiles\CliPack\Services\YoutubeChannelResolverService;
 
-/**
- * This is the service provider.
- *
- * Place the line below in the providers array inside app/config/app.php
- * <code>'MyForksFiles\CliPack\CliPackServiceProvider::class',</code>
- *
- * @package CliPack
- *
- *- -***
- **/
 class CliPackServiceProvider extends ServiceProvider
 {
-    use CliPackTools;
-
     /**
-     * Indicates if loading of the provider is deferred.
-     *
-     * @var bool
+     * @var array<int, class-string>
      */
-    protected $defer = false;
-
-    /**
-     * @var array
-     */
-    protected $commands = [
-        'MyForksFiles\CliPack\Commands\DbDumper',
-        'MyForksFiles\CliPack\Commands\DbImporter',
-        'MyForksFiles\CliPack\Commands\DevLog',
-        'MyForksFiles\CliPack\Commands\RunPhp',
-        'MyForksFiles\CliPack\Commands\ScheduleList',
-        'MyForksFiles\CliPack\Commands\SetAuthBasic',
-//        'MyForksFiles\CliPack\Commands\GetConfig',
-//        'MyForksFiles\CliPack\Commands\LastLogs',
-//        'MyForksFiles\CliPack\Commands\UsageStatus',
-        'MyForksFiles\CliPack\Commands\ExportLang',
-//        'MyForksFiles\CliPack\Commands\ChangeUrl',
-        'MyForksFiles\CliPack\Commands\CleanUp',
+    protected array $commands = [
+        ApacheLogs::class,
+        CheckAppSchema::class,
+        CleanAll::class,
+        CleanFiles::class,
+        CreateUser::class,
+        CrontabBackup::class,
+        DbDumper::class,
+        DbImporter::class,
+        DevLog::class,
+        DiskSpace::class,
+        ExportLang::class,
+        FreeSpace::class,
+        LogRotate::class,
+        RunPhp::class,
+        RunSecurityAuditCommand::class,
+        ScheduleList::class,
+        SetAuthBasic::class,
+        SymfonyLocalPhpSecurityChecker::class,
+        VideoDownloadX::class,
+        VideoDownloadYoutube::class,
+        VideoYoutubeTranscript::class,
+        VideoYoutubeTranscriptArticle::class,
+        YoutubeFindChannelCommand::class,
     ];
 
-    /**
-     * Bootstrap the application events.
-     *
-     * @return void
-     */
-    public function boot()
+    #[\Override]
+    public function register(): void
     {
-        //config
         $this->mergeConfigFrom(
-            __DIR__ . '/config/app.php',
-            'packages.MyForksFiles.CliPack.app'
+            __DIR__.'/config/app.php',
+            'clipack'
         );
 
-        $kernel = $this->app['Illuminate\Contracts\Http\Kernel'];
+        $this->app->singleton(SecurityAuditService::class);
+        $this->app->singleton(TranscriptCleaner::class);
+        $this->app->singleton(YoutubeChannelResolverService::class);
+    }
 
-        if (CliPackTools::checkAuthBasicStatus()) {
-            $kernel->pushMiddleware('MyForksFiles\CliPack\Http\Middleware\AuthBasic');
+    public function boot(): void
+    {
+        $this->loadTranslationsFrom(__DIR__.'/lang', 'clipack');
+
+        $this->publishes([
+            __DIR__.'/config/app.php' => config_path('clipack.php'),
+        ], 'clipack-config');
+
+        $this->publishes([
+            __DIR__.'/lang' => $this->app->langPath('vendor/clipack'),
+        ], 'clipack-lang');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands($this->commands);
         }
     }
 
     /**
-     * Register the command.
-     *
-     * @return void
+     * @return array<int, class-string>
      */
-    public function register()
+    #[\Override]
+    public function provides(): array
     {
-        $this->commands($this->commands);
-        $this->app->singleton(DevStatusFacade::class, function () {
-            return new CliPackFacade();
-        });
-        $this->app->alias(CliPackFacade::class, 'CliPack');
-    }
-
-    /**
-     * Get the services provided by the provider.
-     *
-     * @return array
-     */
-    public function provides()
-    {
-        return [__CLASS__];
+        return array_merge(
+            [self::class, SecurityAuditService::class, TranscriptCleaner::class, YoutubeChannelResolverService::class],
+            $this->commands,
+        );
     }
 }
