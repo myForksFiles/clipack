@@ -61,7 +61,7 @@
 			]
 		},
 		"branch-alias": {
-			"dev-dev": "1.0-dev"
+			"dev-dev": "2.0-dev"
 		}
 	},
 	"scripts": {
