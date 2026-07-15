@@ -13,13 +13,18 @@ use Symfony\Component\Process\Process;
 
 class DevLog extends Command
 {
-    protected $signature = 'dev:log
+    protected $signature = 'mff:dev:log
                             {protect? : Protect/Lock System}
                             {unlock?  : Unlock System}
                             {message? : Message}
                             {--a|all  : Show all}';
 
     protected $description = 'Lock/unlock system, store and show status log.';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['dev:log'];
 
     protected string $file = 'dev-status.log';
 

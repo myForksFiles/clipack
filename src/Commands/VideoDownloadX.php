@@ -9,31 +9,29 @@ use Illuminate\Support\Str;
 /**
  * Class CleanUp
  *
- * @package MyForksFiles\CliPack\Commands
  * @author myForksFiles(at)gmail.com
+ *
  * @category CLI Laravel clear tools
  *
  *- -***
  */
 class VideoDownloadX extends Command
 {
-    protected $signature = 'video:download:x
-
+    protected $signature = 'mff:video:download:x
         {url : X.com or Twitter post URL}
-
         {--cookies= : Path to cookies.txt file}
-
         {--browser= : Load cookies from browser, e.g. chrome, firefox, brave, safari}
-
         {--dir=videos/x : Directory inside storage/app}
-
         {--filename= : Custom filename without extension}
-
         {--quality=best : yt-dlp format, e.g. best, bv*+ba/b, mp4}
-
         {--dry-run : Print command without downloading}';
 
     protected $description = 'Download video from an X.com/Twitter post using yt-dlp';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['video:download:x'];
 
     public function handle(): int
     {
@@ -105,7 +103,7 @@ class VideoDownloadX extends Command
 
         $result = Process::timeout(300)
             ->env([
-                'PATH' => env('PATH') ?: '/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin',
+                'PATH' => (string) (getenv('PATH') ?: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin'),
             ])
             ->run($command, function (string $type, string $output): void {
                 $output = trim($output);

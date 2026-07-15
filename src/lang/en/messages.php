@@ -13,7 +13,7 @@ return [
     'youtube_transcript_download_failed' => 'Transcript download failed.',
     'downloaded_subtitles_not_found' => 'Downloaded subtitles were not found.',
     'video_may_have_no_subtitles_or_needs_cookies' => 'The video may have no subtitles or YouTube may require cookies.',
-    'try_youtube_transcript_with_browser' => 'Try: php artisan youtube:transcript "URL" --browser=chrome',
+    'try_youtube_transcript_with_browser' => 'Try: php artisan mff:youtube:transcript "URL" --browser=chrome',
     'cannot_read_subtitle_file' => 'Cannot read subtitle file: :path',
     'transcript_file_not_found' => 'Transcript file was not found.',
     'converting_transcript_to_article' => 'Converting transcript into an article...',

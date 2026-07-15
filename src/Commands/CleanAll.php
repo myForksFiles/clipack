@@ -1,50 +1,107 @@
 <?php
 
-namespace App\Console\Commands;
+namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\Console\Output\OutputInterface;
+use Throwable;
 
+/**
+ * Clear Laravel application state via Artisan / framework APIs only.
+ */
 class CleanAll extends Command
 {
-    protected $signature = 'clean';
+    protected $signature = 'mff:clear
+                            {--rebuild-config : Run config:cache after clearing}
+                            {--no-flush : Do not call Cache::flush()}';
 
-    protected $description = 'artisan run all clear command';
+    protected $description = 'Clear Laravel caches using Artisan commands and Cache facade';
 
-    public function handle()
+    /**
+     * Legacy names kept for backward compatibility.
+     *
+     * @var array<int, string>
+     */
+    protected $aliases = [
+        'clean',
+        'cleanup',
+        'mff:cleanup',
+        'mff:clear:all',
+        'mff:clean:up',
+        'mff:cache:clear',
+        'mff:cached',
+        'mff:dev:clear',
+        'dev:clear',
+    ];
+
+    /**
+     * @var array<int, string>
+     */
+    protected array $artisanCommands = [
+        'cache:clear',
+        'config:clear',
+        'route:clear',
+        'view:clear',
+        'optimize:clear',
+        'schedule:clear-cache',
+        'clear-compiled',
+    ];
+
+    public function handle(): int
     {
-        $artisanCommands = [
-            //            'telescope:clear',
-            //            'telescope:prune',
-            // 'config:clear',
-            // 'cache:clear',
-            // 'view:clear',
-            // 'route:clear',
+        $failed = 0;
+        $registered = Artisan::all();
 
-            'cache:clear',
-            'config:cache',
-            'config:clear',
-            'optimize:clear',
-            'route:clear',
-            'schedule:clear-cache',
-            'view:clear',
-            'clear-compiled',
-        ];
+        $this->info('Clearing Laravel caches via Artisan...');
 
-        foreach ($artisanCommands as $command) {
-            Log::info('running artisan command: '.$command);
+        foreach ($this->artisanCommands as $command) {
+            if (! isset($registered[$command])) {
+                $this->comment('Skipping missing command: '.$command, OutputInterface::VERBOSITY_VERBOSE);
+
+                continue;
+            }
+
             try {
-                $this->info('running artisan command: '.$command, OutputInterface::VERBOSITY_VERBOSE);
+                $this->line('Running: '.$command, null, OutputInterface::VERBOSITY_VERBOSE);
+                Log::info('mff:clear running artisan command', ['command' => $command]);
                 $this->callSilent($command);
-            } catch (\Exception $e) {
-                Log::error('error running artisan command: '.$command);
-                Log::error($e->getMessage());
+                $this->info('OK: '.$command);
+            } catch (Throwable $e) {
+                $failed++;
+                Log::error('mff:clear artisan command failed', [
+                    'command' => $command,
+                    'exception' => $e->getMessage(),
+                ]);
+                $this->error('Failed: '.$command.' ('.$e->getMessage().')');
             }
         }
 
-        $log = base_path('/storage/logs/laravel.log');
-        file_put_contents($log, '');
-        $this->info(filesize($log).' bytes cleared from laravel.log');
+        if (! $this->option('no-flush')) {
+            Cache::flush();
+            $this->info('OK: Cache::flush()');
+        }
+
+        if ($this->option('rebuild-config') && isset($registered['config:cache'])) {
+            try {
+                $this->callSilent('config:cache');
+                $this->info('OK: config:cache');
+            } catch (Throwable $e) {
+                $failed++;
+                $this->error('Failed: config:cache ('.$e->getMessage().')');
+            }
+        }
+
+        if ($failed > 0) {
+            $this->warn($failed.' step(s) failed.');
+
+            return self::FAILURE;
+        }
+
+        $this->info('Laravel clear completed.');
+
+        return self::SUCCESS;
     }
 }

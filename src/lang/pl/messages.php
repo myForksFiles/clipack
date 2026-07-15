@@ -13,7 +13,7 @@ return [
     'youtube_transcript_download_failed' => 'Nie udało się pobrać transkrypcji.',
     'downloaded_subtitles_not_found' => 'Nie znaleziono pobranych napisów.',
     'video_may_have_no_subtitles_or_needs_cookies' => 'Film może nie mieć napisów albo YouTube wymaga cookies.',
-    'try_youtube_transcript_with_browser' => 'Spróbuj: php artisan youtube:transcript "URL" --browser=chrome',
+    'try_youtube_transcript_with_browser' => 'Spróbuj: php artisan mff:youtube:transcript "URL" --browser=chrome',
     'cannot_read_subtitle_file' => 'Nie można odczytać pliku napisów: :path',
     'transcript_file_not_found' => 'Nie znaleziono pliku transkrypcji.',
     'converting_transcript_to_article' => 'Konwertuję transkrypcję na artykuł...',

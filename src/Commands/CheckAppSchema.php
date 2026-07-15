@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
 use Illuminate\Database\Eloquent\Model;
@@ -11,12 +11,23 @@ use Illuminate\Support\Facades\Schema;
 
 class CheckAppSchema extends Command
 {
-    protected $signature = 'dev:check:schema {--fail-on-warning : Return non-zero exit code on warnings}';
+    protected $signature = 'mff:schema:check {--fail-on-warning : Return non-zero exit code on warnings}';
 
-    protected $description = 'Checks migrations status, DB connectivity, tables for models, timestamps and soft deletes columns';
+    protected $description = 'Check migrations status, DB connectivity, and model table consistency';
 
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['dev:check:schema'];
+
+    /**
+     * @var array<int, string>
+     */
     protected array $errors = [];
 
+    /**
+     * @var array<int, string>
+     */
     protected array $warnings = [];
 
     public function handle(): int
@@ -30,27 +41,27 @@ class CheckAppSchema extends Command
         $this->newLine();
         $this->line(str_repeat('-', 60));
 
-        if ($this->errors) {
+        if ($this->errors !== []) {
             $this->error('Errors:');
             foreach ($this->errors as $error) {
                 $this->line(" - {$error}");
             }
         }
 
-        if ($this->warnings) {
+        if ($this->warnings !== []) {
             $this->warn('Warnings:');
             foreach ($this->warnings as $warning) {
                 $this->line(" - {$warning}");
             }
         }
 
-        if (! $this->errors && ! $this->warnings) {
+        if ($this->errors === [] && $this->warnings === []) {
             $this->info('OK: migrations, models and database look consistent.');
 
             return self::SUCCESS;
         }
 
-        if ($this->errors) {
+        if ($this->errors !== []) {
             return self::FAILURE;
         }
 
@@ -72,6 +83,13 @@ class CheckAppSchema extends Command
     {
         try {
             $migrationPath = database_path('migrations');
+
+            if (! is_dir($migrationPath)) {
+                $this->warnings[] = 'Migrations directory does not exist.';
+
+                return;
+            }
+
             $files = collect(File::files($migrationPath))
                 ->map(fn ($file) => pathinfo($file->getFilename(), PATHINFO_FILENAME))
                 ->sort()
@@ -103,7 +121,7 @@ class CheckAppSchema extends Command
     {
         $models = $this->discoverModels();
 
-        if (empty($models)) {
+        if ($models === []) {
             $this->warnings[] = 'No models found in app/Models.';
 
             return;
@@ -147,6 +165,9 @@ class CheckAppSchema extends Command
         $this->info('Models checked against database.');
     }
 
+    /**
+     * @return array<int, class-string<Model>>
+     */
     protected function discoverModels(): array
     {
         $modelsPath = app_path('Models');

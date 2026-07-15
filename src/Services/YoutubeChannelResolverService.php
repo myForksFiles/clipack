@@ -196,15 +196,16 @@ class YoutubeChannelResolverService
         $title = null;
 
         $idPatterns = [
-            '/https:\\\\/\\\\/www\\\\.youtube\\\\.com\\\\/feeds\\\\/videos\\\\.xml\\\\?channel_id=(UC[a-zA-Z0-9_-]{20,})/',
-            '/"externalId":"(UC[a-zA-Z0-9_-]{20,})"/',
-            '/"channelId":"(UC[a-zA-Z0-9_-]{20,})"/',
-            '/"browseId":"(UC[a-zA-Z0-9_-]{20,})"/',
-            '/"browseEndpoint":\\{"browseId":"(UC[a-zA-Z0-9_-]{20,})"/',
-            '/"navigationEndpoint":\\{"browseEndpoint":\\{"browseId":"(UC[a-zA-Z0-9_-]{20,})"/',
-            '/channel_id=(UC[a-zA-Z0-9_-]{20,})/',
-            '/https:\\/\\/www\\.youtube\\.com\\/channel\\/(UC[a-zA-Z0-9_-]{20,})/',
-            '/<link[^>]+rel="canonical"[^>]+href="https:\\/\\/www\\.youtube\\.com\\/channel\\/(UC[a-zA-Z0-9_-]{20,})"/i',
+            '#https://www\.youtube\.com/feeds/videos\.xml\?channel_id=(UC[a-zA-Z0-9_-]{20,})#',
+            '#https:\\\\/\\\\/www\\\\.youtube\\\\.com\\\\/feeds\\\\/videos\\\\.xml\\\\?channel_id=(UC[a-zA-Z0-9_-]{20,})#',
+            '#"externalId":"(UC[a-zA-Z0-9_-]{20,})"#',
+            '#"channelId":"(UC[a-zA-Z0-9_-]{20,})"#',
+            '#"browseId":"(UC[a-zA-Z0-9_-]{20,})"#',
+            '#"browseEndpoint":\{"browseId":"(UC[a-zA-Z0-9_-]{20,})"#',
+            '#"navigationEndpoint":\{"browseEndpoint":\{"browseId":"(UC[a-zA-Z0-9_-]{20,})"#',
+            '#channel_id=(UC[a-zA-Z0-9_-]{20,})#',
+            '#https://www\.youtube\.com/channel/(UC[a-zA-Z0-9_-]{20,})#',
+            '#<link[^>]+rel="canonical"[^>]+href="https://www\.youtube\.com/channel/(UC[a-zA-Z0-9_-]{20,})"#i',
         ];
 
         foreach ($idPatterns as $pattern) {
@@ -265,7 +266,7 @@ class YoutubeChannelResolverService
         ];
 
         foreach ($patterns as $pattern) {
-            if (preg_match($pattern, $matches = [] ? '' : $html, $matches)) {
+            if (preg_match($pattern, $html, $matches) === 1) {
                 return $matches[1];
             }
         }

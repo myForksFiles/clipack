@@ -1,6 +1,6 @@
 <?php
 
-namespace MyForksFiles\CliPack\Models;
+namespace MyForksFiles\CliPack\Services;
 
 use Illuminate\Support\Facades\Request;
 
@@ -358,8 +358,11 @@ class SecurityAuditService
             'compatibility_notes' => [],
         ];
 
-        if (isset($supportedBranches[$branch])) {
-            $meta = $supportedBranches[$branch];
+        foreach ($supportedBranches as $supportedBranch => $meta) {
+            if ($supportedBranch !== $branch) {
+                continue;
+            }
+
             $result['is_supported_branch'] = true;
             $result['active_support_until'] = $meta['active_support_until'];
             $result['security_support_until'] = $meta['security_support_until'];
@@ -376,6 +379,8 @@ class SecurityAuditService
             if (! $result['is_latest_known_patch']) {
                 $result['patch_warning'] = 'Running below the latest known patch release for this branch.';
             }
+
+            break;
         }
 
         if (version_compare($version, '8.2.0', '>=')) {

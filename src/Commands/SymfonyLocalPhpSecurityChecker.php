@@ -1,109 +1,79 @@
 <?php
 
-namespace App\Console\Commands;
+namespace MyForksFiles\CliPack\Commands;
 
-use App\Notifications\ImportEmailNotification;
 use Illuminate\Console\Command;
-use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Log;
-use Symfony\Component\Console\Output\OutputInterface;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
 class SymfonyLocalPhpSecurityChecker extends Command
 {
-    protected $signature = 'mmf:security:check';
+    protected $signature = 'mff:security:check';
 
-    protected $description = 'local-php-security-checker';
+    protected $description = 'Run local-php-security-checker against composer.lock';
 
-    protected $isDeBug = false;
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['mmf:security:check'];
 
-    public function handle()
+    public function handle(): int
     {
-        $this->isDeBug = $this->getOutput()->getVerbosity() >= OutputInterface::VERBOSITY_DEBUG;
+        $binary = 'local-php-security-checker';
 
-        if ($this->isDeBug) {
-            $this->newLine(1);
-            $this->info('run: '.$this->description);
+        if (! $this->commandExists($binary)) {
+            $this->error("{$binary} is not installed or not available in PATH.");
+
+            return self::FAILURE;
         }
 
-        if ($this->runSymfonySecurityCheck()) {
-            return Command::SUCCESS;
-        } elseif ($this->isDeBug) {
-            return Command::FAILURE;
+        $lockFile = base_path('composer.lock');
+
+        if (! is_file($lockFile)) {
+            $this->error('composer.lock was not found in the project root.');
+
+            return self::FAILURE;
         }
 
-        return Command::SUCCESS;
-    }
-
-    public function scheduleCommand(Schedule $schedule): void
-    {
-        $schedule->command(self::class, [])
-            ->weekly()
-            ->saturdays()
-            ->at('1:27')
-            ->withoutOverlapping(10)
-            ->onFailure(function (): void {
-                $this->setNotification(['status' => 'failure to start local-php-security-checker']);
-            });
-    }
-
-    private function runSymfonySecurityCheck(): bool
-    {
-        $localPhpSecurityChecker = 'local-php-security-checker';
-
-        $exists = shell_exec('which '.$localPhpSecurityChecker);
-        if (in_array($exists, ['', '0', false], true) || $exists === null) {
-            if ($this->isDeBug) {
-                $this->error(
-                    PHP_EOL.PHP_EOL.'Command failed: '.$localPhpSecurityChecker.' is not installed. '.PHP_EOL
-                );
-                $this->newLine();
-            }
-
-            return false;
-        }
-
-        $command = $localPhpSecurityChecker.' '.base_path().DIRECTORY_SEPARATOR.'composer.lock';
-        $process = Process::fromShellCommandline($command);
+        $process = new Process([$binary, $lockFile]);
+        $process->setTimeout(120);
 
         try {
             $process->mustRun();
+        } catch (ProcessFailedException $exception) {
+            $message = 'Security check failed: '.$exception->getMessage();
+            Log::error($message);
+            $this->error($message);
 
-            Log::info($msg = 'Command: '.$this->description.' - success '.$process->getOutput());
-            if ($this->isDeBug) {
-                $this->info($msg);
+            if ($process->getOutput() !== '') {
+                $this->line(trim($process->getOutput()));
             }
 
-        } catch (ProcessFailedException $exception) {
-            Log::error($msg = 'Command failed: '.$exception->getMessage());
-            $this->error($msg);
+            if ($process->getErrorOutput() !== '') {
+                $this->line(trim($process->getErrorOutput()));
+            }
+
+            return self::FAILURE;
         }
 
-        //        $importEmailNotification = $this->setNotification(['status' => $process->getOutput()]);
-        //        Notification::send($importEmailNotification->getDefaultUser(), $importEmailNotification);
+        $output = trim($process->getOutput());
+        Log::info('mff:security:check succeeded', ['output' => $output]);
 
-        return true;
+        if ($output === '') {
+            $this->info('No known security advisories found for installed packages.');
+        } else {
+            $this->line($output);
+        }
+
+        return self::SUCCESS;
     }
 
-    private function setNotification(array $params): ImportEmailNotification
+    private function commandExists(string $command): bool
     {
-        $alert = '';
-        $importEmailNotification = new ImportEmailNotification;
+        $process = Process::fromShellCommandline('command -v '.escapeshellarg($command));
+        $process->run();
 
-        if (stristr((string) $params['status'], 'CRITICAL')) {
-            $importEmailNotification->setPriority(1);
-            $alert = ' !!! CRITICAL !!!';
-        }
-
-        //        $importEmailNotification->setImportNotification([
-        //            'subject' => 'Disk space check' . $alert,
-        //            'body' => 'Disk: ' . self::$checkResults['summary'],
-        //            'link' => self::$checkOptions['url'],
-        //            'debug' => $this->isDeBug,
-        //            'log' => self::$checkResults,
-        //        ]);
-
-        return $importEmailNotification;
+        return $process->isSuccessful() && trim($process->getOutput()) !== '';
     }
 }

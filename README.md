@@ -39,65 +39,81 @@ CLIPACK_AUTH_BASIC_ENABLED=false
 CLIPACK_AUTH_USER=user
 CLIPACK_AUTH_PASSWORD=secretPassword
 CLIPACK_RUN_PHP_ENABLED=false
+CLIPACK_ALLOWED_HOSTS=
+CLIPACK_MYSQL_BINARY=mysql
+CLIPACK_USER_MODEL=App\Models\User
+CLIPACK_EXTRA_LOGS_DIR=
+CLIPACK_LOG_ROTATE_PATH=
+CLIPACK_LOG_ROTATE_ARCHIVE=
+CLIPACK_LOG_ROTATE_DAYS=60
 ```
 
 `mff:runphp` is disabled by default and should only be enabled in local/development environments.
 
-## Translations
+## Command naming
 
-The package uses Laravel translations under the `clipack::messages` namespace.
+All package commands use the `mff:` prefix. Legacy names remain available as aliases where noted.
 
-Included languages:
+| Command | Alias(es) | Description |
+|---------|-----------|-------------|
+| `mff:clear` | `clean`, `cleanup`, `mff:cleanup`, `mff:clear:all`, `mff:clean:up`, `mff:cache:clear`, `mff:cached`, `mff:dev:clear`, `dev:clear` | Clear Laravel caches via Artisan/Cache APIs |
+| `mff:clean:files` | `mff:files:clear` | Delete storage cache/session/view files and truncate logs |
+| `mff:logs:clear` | `mff:apache:logs` | Truncate Laravel and web server logs |
+| `mff:logs:rotate` | `knx:qs:logs:rotate` | Archive log files and prune old archives |
+| `mff:db:dump` | | MySQL dump to `storage/sqlDumps` |
+| `mff:db:import` | | Import a SQL dump |
+| `mff:dev:log` | `dev:log` | Dev status lock/log helper |
+| `mff:runphp` | | Run allowlisted local PHP helper scripts |
+| `mff:schedule:list` | `mff:scheduled` | List scheduled commands |
+| `mff:auth:basic` | | Toggle/inspect basic-auth flag file |
+| `mff:disk:free` | `mff:space` | Disk free/used report |
+| `mff:disk:check` | `knx:qs:disk` | Disk check with optional log file |
+| `mff:create:user` | | Create/update user via configured model |
+| `mff:lang:export` | | Export language keys to CSV |
+| `mff:crontab:backup` | | Backup current crontab |
+| `mff:schema:check` | `dev:check:schema` | Schema/migrations/models check |
+| `mff:security:audit` | `security:audit` | PHP/server security audit report |
+| `mff:security:check` | `mmf:security:check` | Run `local-php-security-checker` |
+| `mff:video:download:x` | `video:download:x` | Download X/Twitter video via yt-dlp |
+| `mff:video:download:yt` | `video:download:yt` | Download YouTube video via yt-dlp |
+| `mff:youtube:transcript` | `youtube:transcript` | Download YouTube transcript |
+| `mff:article:from-transcript` | `article:from-transcript` | Build article from transcript |
+| `mff:youtube:channel-id` | `youtube:channel-id` | Resolve YouTube channel ID |
 
-- `en` — English
-- `pl` — Polish
-- `de` — German
-
-Example usage inside the package:
-
-```php
-__('clipack::messages.done')
-__('clipack::messages.directory', ['path' => $path])
-```
-
-After publishing translations, files are copied to:
-
-```text
-lang/vendor/clipack
-```
-
-## Available commands
+## Usage examples
 
 ### Dev log
 
 ```bash
-# save message
-php artisan dev:log message "your message"
-
-# last 10 messages
-php artisan dev:log
-
-# all messages
-php artisan dev:log --all
+php artisan mff:dev:log message "your message"
+php artisan mff:dev:log
+php artisan mff:dev:log --all
 ```
 
 ### Clear helpers
 
 ```bash
-php artisan cleanup
-php artisan mff:clean:up
-```
+# 1) Laravel APIs (Artisan + Cache::flush)
+php artisan mff:clear
+php artisan mff:clear --rebuild-config
 
-### Scheduled commands
+# 2) Delete files on disk (framework cache/views/sessions + logs)
+php artisan mff:clean:files
+php artisan mff:clean:files --report --skip-logs
+php artisan mff:clean:files --extra-logs-dir=../.ddev/logs
 
-```bash
-php artisan mff:scheduled
+# legacy aliases still work: cleanup, clean, mff:cache:clear, dev:clear, ...
+php artisan mff:logs:rotate --create-missing
+php artisan mff:lang:export
+php artisan mff:create:user --email=admin@example.test --name=Admin
+php artisan mff:disk:check --log
 ```
 
 ### Database dump
 
 ```bash
 php artisan mff:db:dump
+php artisan mff:db:import storage/sqlDumps/example.sql --force
 ```
 
 ### Run PHP helper file
@@ -108,86 +124,38 @@ Disabled by default. Enable only in local/development environments:
 CLIPACK_RUN_PHP_ENABLED=true
 ```
 
-Place scripts in the configured allowlisted path and run with explicit confirmation:
-
 ```bash
 php artisan mff:runphp storage/app/clipack-scripts/example.php --force
 ```
 
-### X/Twitter video download
+### Media helpers
 
 ```bash
-php artisan video:download:x "https://x.com/user/status/123"
-php artisan video:download:x "https://x.com/user/status/123" --browser=chrome
-php artisan video:download:x "https://x.com/user/status/123" --cookies=/path/to/cookies.txt
+php artisan mff:video:download:x "https://x.com/user/status/123"
+php artisan mff:video:download:yt "https://www.youtube.com/watch?v=VIDEO_ID"
+php artisan mff:youtube:transcript "https://www.youtube.com/watch?v=VIDEO_ID" --lang=pl,en,de
+php artisan mff:article:from-transcript storage/app/transcripts/youtube/example.txt
+php artisan mff:youtube:channel-id @GoogleDevelopers
 ```
 
-### YouTube video download
+### Security
 
 ```bash
-php artisan video:download:yt "https://www.youtube.com/watch?v=VIDEO_ID"
-php artisan video:download:yt "https://www.youtube.com/watch?v=VIDEO_ID" --browser=chrome
+php artisan mff:security:audit
+php artisan mff:security:audit --json
+php artisan mff:security:check
 ```
 
-### YouTube transcript download
+## Translations
 
-```bash
-php artisan youtube:transcript "https://www.youtube.com/watch?v=VIDEO_ID"
-php artisan youtube:transcript "https://www.youtube.com/watch?v=VIDEO_ID" --lang=pl,en,de
-php artisan youtube:transcript "https://www.youtube.com/watch?v=VIDEO_ID" --browser=chrome
-```
+The package uses Laravel translations under the `clipack::messages` namespace.
 
-### Article from transcript
-
-```bash
-php artisan article:from-transcript storage/app/transcripts/youtube/example.txt
-php artisan article:from-transcript storage/app/transcripts/youtube/example.txt --title="My article" --lang=en
-```
+Included languages: `en`, `pl`, `de`.
 
 ## Development
 
-Install dependencies:
-
 ```bash
 composer install
-```
-
-Run tests:
-
-```bash
-composer test
-```
-
-Run static analysis:
-
-```bash
-composer analyse
-```
-
-Run Rector dry-run:
-
-```bash
-composer rector:test
-```
-
-Run code style check:
-
-```bash
-composer format:test
-```
-
-Fix code style:
-
-```bash
-composer format
-```
-
-Full local check:
-
-```bash
-composer validate --strict
-composer update -W
-composer dump-autoload
 composer test
 composer analyse
 composer rector:test

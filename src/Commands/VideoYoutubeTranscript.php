@@ -19,25 +19,22 @@ use Symfony\Component\Finder\Finder;
  */
 class VideoYoutubeTranscript extends Command
 {
-    protected $signature = 'youtube:transcript
-
+    protected $signature = 'mff:youtube:transcript
         {url : YouTube video URL}
-
         {--dir=transcripts/youtube : Directory inside storage/app}
-
         {--lang=pl,en : Subtitle languages, e.g. pl,en,de}
-
         {--filename= : Custom filename without extension}
-
         {--browser= : Load cookies from browser, e.g. chrome, firefox, brave, safari}
-
         {--cookies= : Path to cookies.txt file}
-
         {--no-auto : Do not download automatic subtitles}
-
         {--dry-run : Print command without downloading}';
 
     protected $description = 'Download YouTube subtitles/transcript and save a clean TXT file';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['youtube:transcript'];
 
     public function handle(): int
     {
@@ -91,7 +88,7 @@ class VideoYoutubeTranscript extends Command
 
         $result = Process::timeout(300)
             ->env([
-                'PATH' => env('PATH') ?: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin',
+                'PATH' => (string) (getenv('PATH') ?: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin'),
             ])
             ->run($command, function (string $type, string $output): void {
                 $output = trim($output);

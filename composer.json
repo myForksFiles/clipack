@@ -65,7 +65,7 @@
 		}
 	},
 	"scripts": {
-		"analyse": "phpstan analyse",
+		"analyse": "phpstan analyse --memory-limit=1G",
 		"format": "pint",
 		"format:test": "pint --test",
 		"rector": "rector process",

@@ -7,6 +7,20 @@ Updates should follow the [Keep a CHANGELOG](https://raw.githubusercontent.com/m
 ## Unreleased
 
 ### Added
+- Registered the full package command set in `CliPackServiceProvider`.
+- Unified command names under the `mff:` prefix with legacy aliases.
+- Expanded PHPStan analysis to the whole `src` tree.
+- Reworked security audit, security checker, free-space, crontab backup and YouTube channel-id commands to drop host-app couplings.
+- Implemented `mff:auth:basic` on/off/status handling.
+
+### Removed
+- Removed unused facade, commented routes/views/migrations and temporary analysis artifacts.
+
+### Fixed
+- Restored and modernized `CreateUser`, `DiskSpace`, `LogRotate`, `ClearCaches`, `CleanAll` and `ExportLang` as package commands without host-app couplings.
+- Unified overlapping clean commands into `mff:clear` (Laravel/Artisan) and `mff:clean:files` (filesystem wipe), keeping legacy aliases.
+
+### Added
 - Added PHP 8.3 and Laravel 12 package support.
 - Added Pest test suite with Orchestra Testbench.
 - Added feature tests for service provider registration, command registration, Basic Auth middleware and safe `mff:runphp` execution paths.

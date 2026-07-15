@@ -3,58 +3,49 @@
 namespace MyForksFiles\CliPack\Commands;
 
 use Illuminate\Console\Command;
-use Illuminate\Console\Scheduling\Schedule;
-use Symfony\Component\Console\Output\OutputInterface;
+use Illuminate\Support\Facades\File;
 use Symfony\Component\Process\Exception\ProcessFailedException;
 use Symfony\Component\Process\Process;
 
-/**
- * Class CrontabBackup
- */
 class CrontabBackup extends Command
 {
-    protected $signature = 'mff::crontab';
+    protected $signature = 'mff:crontab:backup
+                            {--user= : System user whose crontab should be exported}
+                            {--dir= : Output directory (default: storage/app/crontab)}';
 
-    protected $description = 'backup current crontab';
+    protected $description = 'Backup the current crontab to a timestamped file';
 
-    protected $isDeBug = false;
-
-    protected $script = 'crontab -l -u www > ./%s.txt';
-
-    public function handle()
+    public function handle(): int
     {
-        $this->isDeBug = $this->getOutput()->getVerbosity() >= OutputInterface::VERBOSITY_DEBUG;
+        $outputDir = (string) ($this->option('dir') ?: storage_path('app/crontab'));
+        File::ensureDirectoryExists($outputDir);
 
-        if ($this->isDeBug) {
-            $this->newLine(1);
-            $this->info('run: '.$this->description);
+        $target = $outputDir.DIRECTORY_SEPARATOR.date('Y-m-d_His').'_crontab.txt';
+        $user = $this->option('user');
+
+        $command = ['crontab', '-l'];
+        if (is_string($user) && $user !== '') {
+            $command = ['crontab', '-l', '-u', $user];
         }
 
-        $process = Process::fromShellCommandline(sprintf($this->script, date('Y-m-d_His')));
+        $process = new Process($command);
+        $process->setTimeout(30);
 
         try {
             $process->mustRun();
+        } catch (ProcessFailedException $exception) {
+            $this->error('Failed to read crontab: '.$exception->getMessage());
 
-            if ($this->isDeBug) {
-                $this->info('results: '.$process->getOutput());
+            if ($process->getErrorOutput() !== '') {
+                $this->line(trim($process->getErrorOutput()));
             }
 
-            return true;
-        } catch (ProcessFailedException $exception) {
-            $this->error('Command failed: '.$exception->getMessage());
-
-            return false;
-        } finally {
+            return self::FAILURE;
         }
 
-        return Command::SUCCESS;
-    }
+        File::put($target, $process->getOutput());
+        $this->info('Crontab backup saved: '.$target);
 
-    public function scheduleCommand(Schedule $schedule): void
-    {
-        $schedule->command(self::class, [])
-            ->weekly()
-            ->saturdays()
-            ->at('1:25');
+        return self::SUCCESS;
     }
 }

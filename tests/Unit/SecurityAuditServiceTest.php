@@ -1,10 +1,10 @@
 <?php
 
-use MyForksFiles\CliPack\Models\SecurityAuditService;
+use MyForksFiles\CliPack\Services\SecurityAuditService;
 
 function callSecurityAuditPrivateMethod(string $method, mixed ...$arguments): mixed
 {
-    $service = new SecurityAuditService();
+    $service = new SecurityAuditService;
     $reflection = new ReflectionMethod($service, $method);
     $reflection->setAccessible(true);
 

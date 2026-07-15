@@ -17,9 +17,14 @@ use Throwable;
  */
 class ApacheLogs extends Command
 {
-    protected $signature = 'mff:apache:logs {apacheLogsDir?} {--type=apache}';
+    protected $signature = 'mff:logs:clear {apacheLogsDir?} {--type=apache}';
 
     protected $description = 'Clear Laravel and web server logs';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['mff:apache:logs'];
 
     private const string TYPE_APACHE = 'apache';
 

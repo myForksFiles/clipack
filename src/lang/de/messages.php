@@ -13,7 +13,7 @@ return [
     'youtube_transcript_download_failed' => 'Transkript-Download fehlgeschlagen.',
     'downloaded_subtitles_not_found' => 'Heruntergeladene Untertitel wurden nicht gefunden.',
     'video_may_have_no_subtitles_or_needs_cookies' => 'Das Video hat möglicherweise keine Untertitel oder YouTube benötigt Cookies.',
-    'try_youtube_transcript_with_browser' => 'Versuche: php artisan youtube:transcript "URL" --browser=chrome',
+    'try_youtube_transcript_with_browser' => 'Versuche: php artisan mff:youtube:transcript "URL" --browser=chrome',
     'cannot_read_subtitle_file' => 'Untertiteldatei kann nicht gelesen werden: :path',
     'transcript_file_not_found' => 'Transkriptdatei wurde nicht gefunden.',
     'converting_transcript_to_article' => 'Transkript wird in einen Artikel umgewandelt...',

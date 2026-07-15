@@ -17,23 +17,21 @@ use Illuminate\Support\Str;
  */
 class VideoDownloadYoutube extends Command
 {
-    protected $signature = 'video:download:yt
-
+    protected $signature = 'mff:video:download:yt
         {url : YouTube video URL}
-
         {--dir=videos/youtube : Directory inside storage/app}
-
         {--filename= : Custom filename without extension}
-
         {--quality=bv*+ba/b : yt-dlp format}
-
         {--browser= : Load cookies from browser, e.g. chrome, firefox, brave, safari}
-
         {--cookies= : Path to cookies.txt file}
-
         {--dry-run : Print command without downloading}';
 
     protected $description = 'Download video from YouTube using yt-dlp';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['video:download:yt'];
 
     public function handle(): int
     {
@@ -84,7 +82,7 @@ class VideoDownloadYoutube extends Command
 
         $result = Process::timeout(900)
             ->env([
-                'PATH' => env('PATH') ?: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin',
+                'PATH' => (string) (getenv('PATH') ?: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin'),
             ])
             ->run($command, function (string $type, string $output): void {
                 $output = trim($output);

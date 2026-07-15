@@ -1,140 +1,92 @@
 <?php
 
-namespace App\Console\Commands\Qs;
+namespace MyForksFiles\CliPack\Commands;
 
-use App\Console\AbstractCommand;
-use App\Notifications\ImportEmailNotification;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Notification;
-use Illuminate\Support\Facades\Storage;
-use Symfony\Component\Console\Output\OutputInterface;
+use Illuminate\Support\Facades\File;
 
-class DiskSpace extends AbstractCommand
+class DiskSpace extends Command
 {
-    protected $signature = 'knx:qs:disk';
+    protected $signature = 'mff:disk:check
+                            {--path=/ : Filesystem path to inspect}
+                            {--limit=85 : Fail when used percentage reaches this limit}
+                            {--log : Append a summary line to the package disk log file}';
 
-    protected $description = 'Disk space check';
+    protected $description = 'Check disk free/used space and optionally write a log entry';
 
-    protected $isDeBug = false;
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['knx:qs:disk'];
 
-    public static $diskLog = 'checkDiskSpace.log';
-
-    public static $checkResults = [];
-
-    protected static $checkOptions = [
-        'drive' => '/',
-        'url' => '/qs/disk',
-    ];
-
-    public function handle()
+    public function handle(): int
     {
-        $this->checkDiskSpace();
+        $path = (string) $this->option('path');
+        $limit = (int) $this->option('limit');
 
-        return Command::SUCCESS;
-    }
+        if ($path !== '/' && ! is_dir($path)) {
+            $this->error('Path does not exist: '.$path);
 
-    //    public function scheduleCommand(Schedule $schedule): void
-    //    {
-    //
-    //    }
-
-    public function checkDiskSpace()
-    {
-        $status = self::check();
-
-        $importEmailNotification = $this->setNotification(['status' => $status]);
-        if ($importEmailNotification->priority < 4) {
-            Notification::send($importEmailNotification->getDefaultUser(), $importEmailNotification);
+            return self::FAILURE;
         }
 
-        if ($this->getOutput()->getVerbosity() >= OutputInterface::VERBOSITY_DEBUG) {
-            $this->isDeBug = true;
-            $this->newLine(5);
-            $this->info('run: '.$this->description);
-            $this->info(' >> '.self::$checkResults['summary']);
-            unset(self::$checkResults['summary']);
-            $this->table(array_keys(self::$checkResults), [array_values(self::$checkResults)]);
-            $this->newLine(5);
+        $total = disk_total_space($path);
+        $free = disk_free_space($path);
+
+        if ($total === false || $free === false || $total <= 0) {
+            $this->error('Unable to read disk space for path: '.$path);
+
+            return self::FAILURE;
         }
-    }
 
-    public static function check()
-    {
-        $result = self::diskSpaceCheck();
-
+        $used = $total - $free;
+        $usedPercent = ($used / $total) * 100;
         $summary = sprintf(
-            '%s free, %s (%.2f%%) used from %s',
-            $result['free'],
-            $result['used'],
-            $result['percent'],
-            $result['total']
+            '%s free, %s (%.2f%%) used from %s on %s',
+            $this->formatBytes((int) $free),
+            $this->formatBytes((int) $used),
+            $usedPercent,
+            $this->formatBytes((int) $total),
+            $path
         );
-        $result['summary'] = $summary;
 
-        self::$checkResults = $result;
+        $this->table(
+            ['Metric', 'Value'],
+            [
+                ['Path', $path],
+                ['Total', $this->formatBytes((int) $total)],
+                ['Used', $this->formatBytes((int) $used).sprintf(' (%.2f%%)', $usedPercent)],
+                ['Free', $this->formatBytes((int) $free)],
+                ['Warn limit', $limit.'% used'],
+                ['Summary', $summary],
+            ]
+        );
 
-        Storage::disk('local')->append(self::$diskLog, date('Y-m-d H:i:s').' - '.$summary);
-
-        if (self::getUsageLimit() < $result['total']) {
-            return true; // send notification via cron kernel
+        if ($this->option('log')) {
+            $logRelative = (string) config('clipack.disk.log_file', 'clipack-disk-space.log');
+            $logPath = storage_path('logs/'.$logRelative);
+            File::ensureDirectoryExists(dirname($logPath));
+            File::append($logPath, now()->toDateTimeString().' - '.$summary.PHP_EOL);
+            $this->line('Logged to: '.$logPath);
         }
 
-        return false;
-    }
+        if ($usedPercent >= $limit) {
+            $this->warn(sprintf('Disk usage is above the configured limit (%.2f%% >= %d%%).', $usedPercent, $limit));
 
-    private static function calculateResult(int $value): string
-    {
-        return round($value / 1024 ** $i = floor(log($value, 1024)), 2)
-            .' '
-            .['b', 'kB', 'MB', 'GB', 'TB', 'PB'][$i];
-    }
-
-    private static function diskSpaceCheck(): array
-    {
-        $diskFree = disk_free_space(self::$checkOptions['drive']);
-        $diskTotal = disk_total_space(self::$checkOptions['drive']);
-        $diskUsed = $diskTotal - $diskFree;
-        $diskPercent = $diskUsed / $diskTotal * 100;
-
-        $diskFree = self::calculateResult($diskFree);
-        $diskUsed = self::calculateResult($diskUsed);
-        $diskTotal = self::calculateResult($diskTotal);
-
-        return [
-            'percent' => sprintf('%.2f', $diskPercent),
-            'free' => $diskFree,
-            'used' => $diskUsed,
-            'total' => $diskTotal,
-        ];
-    }
-
-    private static function getUsageLimit(): int
-    {
-        return config('knx.KNX_DISK_USAGE_LIMIT', 85);
-    }
-
-    private function setNotification(array $params): ImportEmailNotification
-    {
-        $alert = '';
-        $importEmailNotification = new ImportEmailNotification;
-        if (self::$checkResults['percent'] > (self::getUsageLimit() - 10)) {
-            $importEmailNotification->setPriority(3);
-            $importEmailNotification->toLog($importEmailNotification->getDefaultUser());
-            $alert = ' ! WARNING ';
-        }
-        if ($params['status']) {
-            $importEmailNotification->setPriority(1);
-            $alert = ' !!! CRITICAL !!!';
+            return self::FAILURE;
         }
 
-        $importEmailNotification->setImportNotification([
-            'subject' => 'Disk space check'.$alert,
-            'body' => 'Disk: '.self::$checkResults['summary'],
-            'link' => self::$checkOptions['url'],
-            'debug' => $this->isDeBug,
-            'log' => self::$checkResults,
-        ]);
+        $this->info('Disk usage is within the configured limit.');
 
-        return $importEmailNotification;
+        return self::SUCCESS;
+    }
+
+    private function formatBytes(int $bytes): string
+    {
+        $units = ['B', 'kB', 'MB', 'GB', 'TB', 'PB'];
+        $power = $bytes > 0 ? (int) floor(log($bytes, 1024)) : 0;
+        $power = min($power, count($units) - 1);
+
+        return sprintf('%.2f %s', $bytes / (1024 ** $power), $units[$power]);
     }
 }

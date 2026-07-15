@@ -2,29 +2,40 @@
 
 namespace MyForksFiles\CliPack\Commands;
 
-use App\Models\SecurityAuditReport;
-use App\Services\SecurityAuditService;
 use Illuminate\Console\Command;
+use MyForksFiles\CliPack\Services\SecurityAuditService;
 
 class RunSecurityAuditCommand extends Command
 {
-    protected $signature = 'security:audit {--json : Print raw JSON output}';
+    protected $signature = 'mff:security:audit {--json : Print raw JSON output}';
 
-    protected $description = 'Run server security audit and store the report';
+    protected $description = 'Run a server security audit and print the report';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['security:audit'];
 
     public function handle(SecurityAuditService $service): int
     {
         $report = $service->run();
 
-        $saved = SecurityAuditReport::create($report);
-
         $this->info('Security audit completed.');
-        $this->line('Report ID: '.$saved->id);
-        $this->line('Risk score: '.$saved->risk_score);
-        $this->line('PHP: '.$saved->php_version);
+        $this->line('Hostname: '.(string) ($report['hostname'] ?? 'unknown'));
+        $this->line('Risk score: '.(string) ($report['risk_score'] ?? 0));
+        $this->line('PHP: '.(string) ($report['php_version'] ?? PHP_VERSION));
 
         if ($this->option('json')) {
-            $this->line(json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES));
+            $this->line(json_encode($report, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR));
+        } else {
+            $summary = $report['summary_checks'] ?? [];
+            if (is_array($summary) && $summary !== []) {
+                $rows = [];
+                foreach ($summary as $check => $passed) {
+                    $rows[] = [(string) $check, $passed ? 'OK' : 'FAIL'];
+                }
+                $this->table(['Check', 'Status'], $rows);
+            }
         }
 
         return self::SUCCESS;

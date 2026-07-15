@@ -17,23 +17,21 @@ use Illuminate\Support\Str;
  */
 class VideoYoutubeTranscriptArticle extends Command
 {
-    protected $signature = 'article:from-transcript
-
+    protected $signature = 'mff:article:from-transcript
         {transcript : Path to TXT transcript file}
-
         {--dir=articles/youtube : Output directory inside storage/app}
-
         {--title= : Preferred article title}
-
         {--lang=pl : Article language}
-
         {--style=publicystyczny, konkretny, uporządkowany : Article style}
-
         {--model= : OpenAI model}
-
         {--dry-run : Print command without running it}';
 
     protected $description = 'Convert a TXT transcript into an article using a local ChatGPT/OpenAI CLI';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['article:from-transcript'];
 
     public function handle(): int
     {
@@ -88,9 +86,9 @@ class VideoYoutubeTranscriptArticle extends Command
 
         $result = Process::timeout(600)
             ->env([
-                'OPENAI_API_KEY' => env('OPENAI_API_KEY'),
+                'OPENAI_API_KEY' => (string) config('clipack.openai.api_key', ''),
                 'OPENAI_MODEL' => $model,
-                'PATH' => env('PATH') ?: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin',
+                'PATH' => (string) (getenv('PATH') ?: '/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin'),
             ])
             ->run($command, function (string $type, string $output): void {
                 $output = trim($output);

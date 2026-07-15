@@ -3,22 +3,19 @@
 namespace MyForksFiles\CliPack\Http\Middleware;
 
 use Closure;
-use Exception;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\Response;
 
 class JsonGuard
 {
     /**
-     * Handle an incoming request.
-     *
-     * @return mixed
+     * @param  Closure(Request): Response  $next
      */
-    public function handle(Request $request, Closure $next)
+    public function handle(Request $request, Closure $next): Response
     {
-        $userAgent = $request->header('User-Agent');
-        $referer = $request->header('Referer');
+        $userAgent = (string) $request->header('User-Agent', '');
+        $referer = (string) $request->header('Referer', '');
 
-        // List of blocked user agents (example patterns)
         $blockedUserAgents = [
             '/curl/i',
             '/wget/i',
@@ -28,39 +25,8 @@ class JsonGuard
             '/scrapy/i',
         ];
 
-        $appUrl = config('app.url');
-        $appUrl = explode('://', (string) $appUrl);
-        $appUrl = $appUrl[1] ?? '';
-        if (stristr($appUrl, 'www.')) {
-            $appUrl = str_replace('www.', '', $baseUrl);
-        }
-        if (stristr($appUrl, '/')) {
-            $appUrl = explode('/', $appUrl);
-            $appUrl = $appUrl[0] ?? '';
-        }
-        if (empty($appUrl)) {
-            throw new Exception('APP_URL is empty');
-        }
-
-        config('APP_ALLOWED_HOSTS'); // @TODO: Define coma separated list in .env
-
-        // List of allowed domains (adjust as needed)
-        $allowedReferrers = [
-            $appUrl,
-            'www.'.$appUrl,
-            'production.'.$appUrl,
-            'www.production.'.$appUrl,
-            'staging.'.$appUrl,
-        ];
-
-        foreach ($allowedReferrers as $allowedReferrer) {
-            $allowedReferrers[] = 'http://'.$allowedReferrer;
-            $allowedReferrers[] = 'https://'.$allowedReferrer;
-        }
-
-        // Check if the User-Agent matches any of the blocked patterns
         foreach ($blockedUserAgents as $blockedUserAgent) {
-            if (preg_match($blockedUserAgent, $userAgent)) {
+            if ($userAgent !== '' && preg_match($blockedUserAgent, $userAgent) === 1) {
                 return response()->json(
                     ['error' => 'Access forbidden: Your request looks like a web crawler or bot.'],
                     403
@@ -68,8 +34,9 @@ class JsonGuard
             }
         }
 
-        // Check if the request has a valid Referer header
-        if ($referer && collect($allowedReferrers)->doesntContain(fn ($url) => stripos($referer, (string) $url) === 0)) {
+        $allowedHosts = $this->allowedHosts();
+
+        if ($referer !== '' && ! $this->isAllowedReferer($referer, $allowedHosts)) {
             return response()->json(
                 ['error' => 'Access forbidden: Invalid referer.'],
                 403
@@ -77,5 +44,44 @@ class JsonGuard
         }
 
         return $next($request);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function allowedHosts(): array
+    {
+        $configured = config('clipack.allowed_hosts', []);
+        $hosts = is_array($configured) ? $configured : [];
+
+        $appUrl = (string) config('app.url', '');
+        $host = parse_url($appUrl, PHP_URL_HOST);
+
+        if (is_string($host) && $host !== '') {
+            $hosts[] = $host;
+            $hosts[] = 'www.'.$host;
+        }
+
+        return array_values(array_unique(array_filter($hosts, static fn ($value) => is_string($value) && $value !== '')));
+    }
+
+    /**
+     * @param  array<int, string>  $allowedHosts
+     */
+    private function isAllowedReferer(string $referer, array $allowedHosts): bool
+    {
+        $refererHost = parse_url($referer, PHP_URL_HOST);
+
+        if (! is_string($refererHost) || $refererHost === '') {
+            return false;
+        }
+
+        foreach ($allowedHosts as $allowedHost) {
+            if (strcasecmp($refererHost, $allowedHost) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

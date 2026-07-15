@@ -7,9 +7,14 @@ use Illuminate\Console\Scheduling\Schedule;
 
 class ScheduleList extends Command
 {
-    protected $signature = 'mff:scheduled';
+    protected $signature = 'mff:schedule:list';
 
     protected $description = 'List scheduled commands.';
+
+    /**
+     * @var array<int, string>
+     */
+    protected $aliases = ['mff:scheduled'];
 
     public function __construct(protected Schedule $schedule)
     {

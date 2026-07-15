@@ -32,7 +32,7 @@ it('returns current date with custom format', function (): void {
 });
 
 it('resolves default auth basic protection file path', function (): void {
-    config()->set('packages.MyForksFiles.CliPack.app.fileAuthBasicProtection', null);
+    config()->set('clipack.file_auth_basic_protection', null);
 
     $subject = cliPackToolsTestSubject();
 
@@ -40,7 +40,7 @@ it('resolves default auth basic protection file path', function (): void {
 });
 
 it('resolves configured auth basic protection file path', function (): void {
-    config()->set('packages.MyForksFiles.CliPack.app.fileAuthBasicProtection', 'custom_auth_file');
+    config()->set('clipack.file_auth_basic_protection', 'custom_auth_file');
 
     $subject = cliPackToolsTestSubject();
 
